@@ -114,8 +114,8 @@ function capture(string $uri, callable $render): string
 
 echo "Rendering pages...\n";
 writeFile($outDir, 'index.html', capture('/', fn ($r) => (new HomeController())->index($r)));
-writeFile($outDir, 'booking/index.html', capture('/booking', fn ($r) => (new BookingController())->show($r)));
-writeFile($outDir, 'privacy/index.html', capture('/privacy', fn ($r) => (new HomeController())->privacy($r)));
+writeFile($outDir, 'booking/index.html', capture('/booking/', fn ($r) => (new BookingController())->show($r)));
+writeFile($outDir, 'privacy/index.html', capture('/privacy/', fn ($r) => (new HomeController())->privacy($r)));
 
 $brand = $settings['brand_name'] ?? Config::get('app.name');
 writeFile($outDir, 'booking/thanks/index.html', capture('/booking/thanks/', fn () => print View::render('booking/thanks', [
@@ -130,7 +130,11 @@ writeFile($outDir, '404.html', capture('/404', fn () => print View::render('erro
 ])));
 
 writeFile($outDir, 'robots.txt', capture('/robots.txt', fn ($r) => (new PageController())->robots($r)));
-writeFile($outDir, 'sitemap.xml', capture('/sitemap.xml', fn ($r) => (new PageController())->sitemap($r)));
+// Netlify serves folder pages with a trailing slash (and 301s the bare form),
+// so list the final URLs rather than ones that redirect.
+$sitemap = capture('/sitemap.xml', fn ($r) => (new PageController())->sitemap($r));
+$sitemap = str_replace(['/booking</loc>', '/privacy</loc>'], ['/booking/</loc>', '/privacy/</loc>'], $sitemap);
+writeFile($outDir, 'sitemap.xml', $sitemap);
 
 // Same security headers the PHP app sends, in Netlify's _headers format.
 $headers = "/*\n";
