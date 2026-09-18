@@ -1,0 +1,6 @@
+# Defense in depth only. The correct production configuration points the
+# web server's document root at /public — nothing outside it (app/, config/,
+# database/, storage/, vendor/, .env) should ever be reachable. This file
+# just denies everything in case a document root is ever misconfigured to
+# the project root instead.
+Require all denied

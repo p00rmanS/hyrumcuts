@@ -1,0 +1,60 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+/vendor/
+/node_modules/
+
+# Build artifacts
+/public/assets/css/app.css
+/public/assets/css/app.css.map
+
+# Database (WAL/SHM sidecar files hold live data too)
+/storage/database/*.sqlite
+/storage/database/*.sqlite-journal
+/storage/database/*.sqlite-wal
+/storage/database/*.sqlite-shm
+
+# Real client media — never committed. Add real photos/video locally after
+# cloning; the site falls back to generated placeholders without them.
+/public/assets/images/hyrum.jpg
+/public/assets/video/*.mp4
+/public/assets/video/*.webm
+
+# Local tooling config (contains machine-specific absolute paths)
+/.claude/
+
+# Original build brief (working document, not part of the app)
+/HyrumHaircuts-Claude-Code-Build-Prompt.md
+
+# Logs, mail, sessions
+/storage/logs/*.log
+/storage/mail/*.eml
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+!/storage/logs/.gitkeep
+!/storage/mail/.gitkeep
+
+# Uploaded media (never commit real client uploads)
+/public/uploads/*
+!/public/uploads/.htaccess
+!/public/uploads/gallery/
+/public/uploads/gallery/*
+!/public/uploads/gallery/.gitkeep
+!/public/uploads/reviews/
+/public/uploads/reviews/*
+!/public/uploads/reviews/.gitkeep
+
+# Coverage / test output
+/.phpunit.cache/
+/coverage/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+composer.lock.bak

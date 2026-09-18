@@ -1,0 +1,22 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Serve real files and directories (assets, uploads) directly.
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Everything else goes through the front controller.
+    RewriteRule ^ web.php [L]
+</IfModule>
+
+# Defense in depth: never execute PHP from the uploads directory even if a
+# future misconfiguration removes uploads/.htaccess.
+<IfModule mod_php7.c>
+    <Directory "uploads">
+        php_flag engine off
+    </Directory>
+</IfModule>
+<FilesMatch "\.(env|sqlite|log|sql)$">
+    Require all denied
+</FilesMatch>

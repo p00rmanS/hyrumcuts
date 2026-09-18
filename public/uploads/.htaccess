@@ -1,0 +1,15 @@
+# Uploaded files are user-supplied; never let this directory execute code,
+# regardless of what Uploads::storeImage() already restricted at write time.
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+<FilesMatch "\.(php|phtml|php\d|phar|cgi|pl|py|sh|exe)$">
+    Require all denied
+</FilesMatch>
+
+Options -ExecCGI
+AddHandler cgi-script .php .phtml .pl .py .cgi .sh
