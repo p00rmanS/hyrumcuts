@@ -22,6 +22,7 @@
     "scripts": {
         "test": "phpunit",
         "serve": "php -S localhost:8000 -t public public/web.php",
+        "build-static": "php bin/build-static.php",
         "migrate": "php bin/migrate.php",
         "seed": "php bin/seed.php",
         "create-admin": "php bin/create-admin.php"

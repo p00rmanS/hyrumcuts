@@ -5,6 +5,7 @@
  * @var string $calendlyUrl
  * @var array $timeWindows
  */
+$staticMode ??= false;
 $errors = errors();
 $bookingError = \App\Core\Session::getFlash('booking_error');
 // Calendly's widget.css/widget.js are loaded globally by layouts/site.php
@@ -53,10 +54,19 @@ $bookingError = \App\Core\Session::getFlash('booking_error');
       </div>
     <?php endif; ?>
 
-    <form method="post" action="/booking" novalidate class="space-y-6">
-      <?= csrf_field() ?>
-      <?= \App\Core\SpamGuard::honeypotField() ?>
-      <?= \App\Core\SpamGuard::timingField() ?>
+    <?php if ($staticMode): ?>
+      <?php // Static (Netlify) build: no PHP backend, so Netlify Forms receives the submission. Browser validation replaces server-side validation here. ?>
+      <form method="post" action="/booking/thanks/" name="appointment-request" data-netlify="true" netlify-honeypot="bot-field" class="space-y-6">
+        <input type="hidden" name="form-name" value="appointment-request">
+        <p class="hp-field" aria-hidden="true">
+          <label>Leave this empty <input type="text" name="bot-field" tabindex="-1" autocomplete="off"></label>
+        </p>
+    <?php else: ?>
+      <form method="post" action="/booking" novalidate class="space-y-6">
+        <?= csrf_field() ?>
+        <?= \App\Core\SpamGuard::honeypotField() ?>
+        <?= \App\Core\SpamGuard::timingField() ?>
+    <?php endif; ?>
 
       <div class="grid gap-6 sm:grid-cols-2">
         <div>
@@ -77,10 +87,11 @@ $bookingError = \App\Core\Session::getFlash('booking_error');
       <div class="grid gap-6 sm:grid-cols-2">
         <div>
           <label for="service_id" class="block text-sm font-semibold mb-2">Service / cut type</label>
-          <select id="service_id" name="service_id" class="w-full border border-ink/20 px-4 py-3 bg-paper focus:border-ink">
+          <select id="service_id" name="<?= $staticMode ? 'service' : 'service_id' ?>" class="w-full border border-ink/20 px-4 py-3 bg-paper focus:border-ink">
             <option value="">No preference</option>
             <?php foreach ($services as $service): ?>
-              <option value="<?= (int) $service['id'] ?>" <?= (string) old('service_id') === (string) $service['id'] ? 'selected' : '' ?>><?= e($service['name']) ?></option>
+              <?php // Static build has no database to map an id back, so submit the readable name. ?>
+              <option value="<?= $staticMode ? e($service['name']) : (int) $service['id'] ?>" <?= (string) old('service_id') === (string) $service['id'] ? 'selected' : '' ?>><?= e($service['name']) ?></option>
             <?php endforeach; ?>
           </select>
         </div>

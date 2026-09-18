@@ -16,6 +16,9 @@ $ogImage = url('/assets/images/placeholders/og-image.jpg');
   <?php if ($description !== ''): ?>
   <meta name="description" content="<?= e($description) ?>">
   <?php endif; ?>
+  <?php if (!empty($noindex)): ?>
+  <meta name="robots" content="noindex">
+  <?php endif; ?>
   <link rel="canonical" href="<?= e($canonical) ?>">
 
   <meta property="og:type" content="website">

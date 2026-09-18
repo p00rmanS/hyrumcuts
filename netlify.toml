@@ -1,0 +1,6 @@
+# Netlify cannot run PHP, so it publishes the prebuilt static site in dist/.
+# Regenerate dist/ locally after changing content or views (see README,
+# "Deploying to Netlify") and commit it; there is nothing to build on Netlify.
+[build]
+  publish = "dist"
+  command = "echo 'Publishing prebuilt dist/'"

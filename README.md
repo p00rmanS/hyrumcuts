@@ -149,7 +149,32 @@ MAIL_OWNER_ADDRESS=hyrum@yourdomain.com
 5. Make sure `storage/` and `public/uploads/` are writable by the web server user.
 6. If using SQLite in production, make sure `storage/database/` persists across deploys (it's not something you can safely wipe on every release).
 
-**Netlify / Vercel are not compatible** with this project as-is — both are static/serverless-function hosts and don't run a persistent PHP process or give you a writable SQLite file + local filesystem for uploads the way this app expects. Use a traditional PHP host (shared hosting, a VPS, Laravel Forge/Ploi-style managed PHP hosting, or a container running PHP-FPM + Nginx/Apache) instead.
+**Netlify / Vercel can't run the PHP app itself** — they're static/serverless hosts with no persistent PHP process and no writable SQLite file or upload directory. For the full app (admin dashboard, database-backed requests) use a traditional PHP host (shared hosting, a VPS, managed PHP hosting, or a container running PHP-FPM + Nginx/Apache). For a public-facing site on Netlify, use the static build below.
+
+### Deploying to Netlify (static build)
+
+`bin/build-static.php` renders the real public pages through the real controllers into `dist/`, and `netlify.toml` tells Netlify to publish that folder. There is no build step on Netlify — `dist/` is generated locally and committed.
+
+```bash
+npm run build                                                  # compile Tailwind
+php bin/build-static.php --url=https://your-site.netlify.app   # writes dist/
+git add dist && git commit -m "Rebuild static site" && git push
+```
+
+Netlify redeploys on every push. Re-run the build whenever you change content in `/admin`, a view, or the CSS — the static site is a snapshot of the database at build time.
+
+What's different from the PHP site:
+
+| Feature | On Netlify |
+|---|---|
+| Public pages, gallery, lightbox, FAQ | Same |
+| Booking via Calendly popup | Same |
+| "Send an appointment request" form | Submitted to **Netlify Forms** (form name `appointment-request`) instead of the database. View submissions and set up email notifications or a webhook (e.g. n8n) under *Forms* in the Netlify dashboard. |
+| `/admin` dashboard, booking status tracking, client cancel links | **Not available** — needs PHP and a database |
+| CSRF, rate limiting, server-side validation | Replaced by Netlify's spam filtering, the honeypot field, and browser validation |
+| Security headers / CSP | Same values, written to `dist/_headers` from `Response::headers()` |
+
+Real client media (`hyrum1.mp4`, gallery uploads under `public/uploads/`) is copied into `dist/`, so anything in `dist/` is public in Git as well as on the site. The build copies an explicit allowlist of asset folders, so private files (such as `public/assets/images/hyrum.jpg`) can't leak into it by accident.
 
 ## 13. Backup and restore
 

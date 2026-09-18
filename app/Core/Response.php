@@ -26,21 +26,35 @@ final class Response
         http_response_code($status);
     }
 
+    /**
+     * Single source of truth for security headers: sent by PHP at runtime and
+     * also written to dist/_headers by bin/build-static.php for Netlify.
+     *
+     * @return array<string, string>
+     */
+    public static function headers(): array
+    {
+        return [
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Frame-Options' => 'DENY',
+            'Referrer-Policy' => 'strict-origin-when-cross-origin',
+            'Permissions-Policy' => 'camera=(), microphone=(), geolocation=()',
+            'Content-Security-Policy' =>
+                "default-src 'self'; " .
+                "img-src 'self' data: https://assets.calendly.com https://*.calendly.com; " .
+                "font-src 'self'; " .
+                "style-src 'self' https://assets.calendly.com; " .
+                "script-src 'self' https://assets.calendly.com; " .
+                "frame-src https://calendly.com https://*.calendly.com; " .
+                "connect-src 'self' https://calendly.com https://*.calendly.com; " .
+                "base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+        ];
+    }
+
     public static function securityHeaders(): void
     {
-        header('X-Content-Type-Options: nosniff');
-        header('X-Frame-Options: DENY');
-        header('Referrer-Policy: strict-origin-when-cross-origin');
-        header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
-        header(
-            "Content-Security-Policy: default-src 'self'; " .
-            "img-src 'self' data: https://assets.calendly.com https://*.calendly.com; " .
-            "font-src 'self'; " .
-            "style-src 'self' https://assets.calendly.com; " .
-            "script-src 'self' https://assets.calendly.com; " .
-            "frame-src https://calendly.com https://*.calendly.com; " .
-            "connect-src 'self' https://calendly.com https://*.calendly.com; " .
-            "base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
-        );
+        foreach (self::headers() as $name => $value) {
+            header($name . ': ' . $value);
+        }
     }
 }
