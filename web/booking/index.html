@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Request an appointment — HyrumHaircuts</title>
+  <meta name="description" content="Book a haircut with Hyrum: check live availability or send an appointment request.">
+  <link rel="canonical" href="https://hyrumhaircuts.com/booking/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Request an appointment — HyrumHaircuts">
+  <meta property="og:url" content="https://hyrumhaircuts.com/booking/">
+  <link rel="icon" type="image/png" href="/assets/images/favicon.png">
+  <script type="module" src="/src/public-site/booking.js"></script>
+</head>
+<body class="bg-paper text-ink">
+  <!-- @include header.html -->
+
+  <main id="main-content">
+    <section class="pt-32 pb-16 sm:pt-40 sm:pb-20 bg-ivory">
+      <div class="container-editorial max-w-3xl text-center">
+        <p class="eyebrow mb-3">Booking</p>
+        <h1 class="text-4xl sm:text-5xl mb-5">Request an appointment.</h1>
+        <p class="text-muted text-lg">
+          Pick a time below, or send your details — <span data-bind="barber_name">Hyrum</span> personally confirms every booking by text or email.
+        </p>
+      </div>
+    </section>
+
+    <!-- Live calendar: shown only when a booking link is configured in the CMS. -->
+    <section id="calendar" class="hidden py-16 sm:py-20 border-b border-ink/10 scroll-mt-24" data-live-booking aria-labelledby="calendar-heading">
+      <div class="container-editorial max-w-3xl text-center">
+        <p class="eyebrow mb-3">Option 1</p>
+        <h2 id="calendar-heading" class="text-2xl sm:text-3xl mb-2">Check live availability</h2>
+        <p class="text-muted mb-6">Opens the calendar in its own window. Pick an open time and you're done.</p>
+        <a href="/booking/" class="btn-primary" data-book-cta>Check Live Availability</a>
+      </div>
+    </section>
+
+    <section id="request-form" class="py-16 sm:py-20 scroll-mt-24" aria-labelledby="request-heading">
+      <div class="container-editorial max-w-2xl">
+        <p class="eyebrow mb-3 hidden" data-option-two>Option 2</p>
+        <h2 id="request-heading" class="text-2xl sm:text-3xl mb-2">Send an appointment request</h2>
+        <p class="text-muted mb-8">Don't see a time that works? Send the details and <span data-bind="barber_name">Hyrum</span> will follow up.</p>
+
+        <div class="hidden mb-6 border border-red-800/60 bg-red-50 text-red-900 px-4 py-3 text-sm" role="alert" tabindex="-1" data-form-errors></div>
+
+        <!-- Netlify Forms receives this submission (no database, no client data stored by the CMS). -->
+        <form method="post" action="/booking/thanks/" name="appointment-request" data-netlify="true" netlify-honeypot="bot-field" class="space-y-6" novalidate data-request-form>
+          <input type="hidden" name="form-name" value="appointment-request">
+          <p class="hp-field" aria-hidden="true">
+            <label>Leave this empty <input type="text" name="bot-field" tabindex="-1" autocomplete="off"></label>
+          </p>
+
+          <div class="grid gap-6 sm:grid-cols-2">
+            <div>
+              <label for="full_name" class="block text-sm font-semibold mb-2">Full name</label>
+              <input type="text" id="full_name" name="full_name" required maxlength="120" class="input" autocomplete="name">
+            </div>
+            <div>
+              <label for="phone" class="block text-sm font-semibold mb-2">Mobile number</label>
+              <input type="tel" id="phone" name="phone" required maxlength="30" class="input" autocomplete="tel">
+            </div>
+          </div>
+
+          <div>
+            <label for="email" class="block text-sm font-semibold mb-2">Email address</label>
+            <input type="email" id="email" name="email" required maxlength="190" class="input" autocomplete="email">
+          </div>
+
+          <div class="grid gap-6 sm:grid-cols-2">
+            <div>
+              <label for="service" class="block text-sm font-semibold mb-2">Service / cut type</label>
+              <select id="service" name="service" class="input" data-service-select>
+                <option value="">No preference</option>
+              </select>
+            </div>
+            <div>
+              <label for="client_type" class="block text-sm font-semibold mb-2">Are you a...</label>
+              <select id="client_type" name="client_type" required class="input">
+                <option value="">Select one</option>
+                <option value="first_time">First-time client</option>
+                <option value="returning">Returning client</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid gap-6 sm:grid-cols-2">
+            <div>
+              <label for="preferred_date" class="block text-sm font-semibold mb-2">Preferred date</label>
+              <input type="date" id="preferred_date" name="preferred_date" required class="input" data-min-today>
+            </div>
+            <div data-time-window-field>
+              <label for="preferred_time_slot" class="block text-sm font-semibold mb-2">Preferred time window</label>
+              <select id="preferred_time_slot" name="preferred_time_slot" required class="input" data-time-window-select>
+                <option value="">Select a window</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label for="notes" class="block text-sm font-semibold mb-2">Notes <span class="text-muted font-normal">(optional — current hair, desired look, accommodations)</span></label>
+            <textarea id="notes" name="notes" maxlength="1000" rows="4" class="input"></textarea>
+          </div>
+
+          <div class="flex items-start gap-3">
+            <input type="checkbox" id="consent" name="consent" value="1" required class="mt-1 h-6 w-6 shrink-0">
+            <label for="consent" class="text-sm text-muted">
+              I'd like <span data-bind="barber_name">Hyrum</span> to confirm this by text or email, and I've read the
+              <a href="/privacy/" class="underline hover:text-ink">privacy notice</a>.
+            </label>
+          </div>
+
+          <button type="submit" class="btn-primary w-full sm:w-auto" data-submit>Request Appointment</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- @include footer.html -->
+</body>
+</html>

@@ -1,13 +1,44 @@
 {
   "name": "hyrumhaircuts-site",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Front-end asset build (Tailwind CSS) for the HyrumHaircuts site.",
+  "type": "module",
+  "description": "HyrumHaircuts public website and owner-managed CMS (Supabase + Netlify).",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
-    "dev": "tailwindcss -i ./resources/css/app.css -o ./public/assets/css/app.css --watch",
-    "build": "tailwindcss -i ./resources/css/app.css -o ./public/assets/css/app.css --minify"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint web scripts e2e vite.config.js tailwind.config.js eslint.config.js playwright.config.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:test": "supabase test db",
+    "test:rls": "node scripts/verify-security.mjs",
+    "bootstrap:owner": "node scripts/bootstrap-owner.mjs",
+    "seed:starter": "node scripts/seed-starter-content.mjs"
+  },
+  "dependencies": {
+    "@supabase/postgrest-js": "2.116.0",
+    "@supabase/supabase-js": "2.116.0",
+    "sortablejs": "1.15.7",
+    "tus-js-client": "4.3.1"
   },
   "devDependencies": {
-    "tailwindcss": "^3.4.0"
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.63.0",
+    "autoprefixer": "10.6.1",
+    "eslint": "10.11.0",
+    "globals": "17.12.0",
+    "postcss": "8.5.28",
+    "supabase": "2.117.0",
+    "tailwindcss": "3.4.19",
+    "vite": "8.3.0",
+    "vitest": "5.0.1"
   }
 }

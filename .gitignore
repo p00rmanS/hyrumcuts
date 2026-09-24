@@ -1,60 +1,73 @@
-# Environment / secrets
+# ---------------------------------------------------------------------------
+# Environment / secrets. Only *.example files are ever committed.
+# ---------------------------------------------------------------------------
 .env
 .env.*
 !.env.example
+**/.env
+**/.env.*
+!**/.env.example
 
-# Dependencies
-/vendor/
-/node_modules/
+# Supabase CLI local state and any privileged keys/tokens
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+supabase/.env.*
+!supabase/.env.example
+*.secret
+*.pem
 
-# Build artifacts
-/public/assets/css/app.css
-/public/assets/css/app.css.map
-
-# Database (WAL/SHM sidecar files hold live data too)
-/storage/database/*.sqlite
-/storage/database/*.sqlite-journal
-/storage/database/*.sqlite-wal
-/storage/database/*.sqlite-shm
-
-# Real client media — never committed. Add real photos/video locally after
-# cloning; the site falls back to generated placeholders without them.
-/public/assets/images/hyrum.jpg
-/public/assets/video/*.mp4
-/public/assets/video/*.webm
-
-# Local tooling config (contains machine-specific absolute paths)
-/.claude/
-
-# Original build brief (working document, not part of the app)
-/HyrumHaircuts-Claude-Code-Build-Prompt.md
-
-# Logs, mail, sessions
-/storage/logs/*.log
-/storage/mail/*.eml
-/storage/framework/sessions/*
-!/storage/framework/sessions/.gitkeep
-!/storage/logs/.gitkeep
-!/storage/mail/.gitkeep
-
-# Uploaded media (never commit real client uploads)
-/public/uploads/*
-!/public/uploads/.htaccess
-!/public/uploads/gallery/
-/public/uploads/gallery/*
-!/public/uploads/gallery/.gitkeep
-!/public/uploads/reviews/
-/public/uploads/reviews/*
-!/public/uploads/reviews/.gitkeep
-
-# Coverage / test output
-/.phpunit.cache/
+# ---------------------------------------------------------------------------
+# Dependencies and build output
+# ---------------------------------------------------------------------------
+node_modules/
+/dist/
 /coverage/
+/playwright-report/
+/test-results/
+.vite/
+*.tsbuildinfo
 
-# OS / editor
+# ---------------------------------------------------------------------------
+# Legacy PHP app (kept for reference, not deployed). Private/runtime files.
+# ---------------------------------------------------------------------------
+/legacy-php/vendor/
+/legacy-php/node_modules/
+/legacy-php/.phpunit.cache/
+/legacy-php/public/assets/css/app.css
+/legacy-php/public/assets/css/app.css.map
+/legacy-php/storage/database/*.sqlite*
+/legacy-php/storage/logs/*.log
+/legacy-php/storage/mail/*.eml
+/legacy-php/storage/framework/sessions/*
+!/legacy-php/storage/framework/sessions/.gitkeep
+!/legacy-php/storage/logs/.gitkeep
+!/legacy-php/storage/mail/.gitkeep
+/legacy-php/public/uploads/*
+!/legacy-php/public/uploads/.htaccess
+!/legacy-php/public/uploads/gallery/
+/legacy-php/public/uploads/gallery/*
+!/legacy-php/public/uploads/gallery/.gitkeep
+!/legacy-php/public/uploads/reviews/
+/legacy-php/public/uploads/reviews/*
+!/legacy-php/public/uploads/reviews/.gitkeep
+
+# Real client media is never committed. It is uploaded through the CMS.
+/legacy-php/public/assets/images/hyrum.jpg
+/legacy-php/public/assets/video/*.mp4
+/legacy-php/public/assets/video/*.webm
+
+# ---------------------------------------------------------------------------
+# Tooling / working documents / OS noise
+# ---------------------------------------------------------------------------
+/.claude/
+/HyrumHaircuts-Claude-Code-Build-Prompt.md
+/HyrumHaircuts-Claude-Code-Build-Prompt-v2.md
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+*.log
 
-composer.lock.bak
+# Playwright temporary credentials
+e2e/.auth/

@@ -1,0 +1,364 @@
+import { h, mount, setVisible, svgIcon } from '../lib/dom.js';
+import { filterItems, visibleCategories } from '../lib/content.js';
+
+/**
+ * Portfolio grid, category filters and lightbox.
+ *
+ * Everything from the database is rendered as text or as a validated URL
+ * attribute (see lib/dom.js), never as HTML. Each card is a real link to the
+ * full image, so the gallery still works if the lightbox script fails.
+ */
+
+const CTA_AFTER = 6; // show the mid-gallery booking band after this many cards
+const PLAY_ICON = 'M8 5v14l11-7z';
+const HASH_PREFIX = '#work/';
+
+/** "#work/<id>" is a shareable link that opens one piece of work in the viewer. */
+export function workHash(id) {
+  return `${HASH_PREFIX}${encodeURIComponent(id)}`;
+}
+
+/** The item id in a "#work/<id>" hash, or '' for any other hash. */
+export function idFromHash(hash) {
+  if (typeof hash !== 'string' || !hash.startsWith(HASH_PREFIX)) return '';
+  try {
+    return decodeURIComponent(hash.slice(HASH_PREFIX.length));
+  } catch {
+    return '';
+  }
+}
+
+function ratioClass(width, height) {
+  if (!width || !height) return 'aspect-[3/4]';
+  if (width === height) return 'aspect-square';
+  return width > height ? 'aspect-[4/3]' : 'aspect-[3/4]';
+}
+
+function img(view, alt, { eager = false } = {}) {
+  return h('img', {
+    src: view.thumb,
+    // The card variant (<=800px) for grid tiles, the full variant on large or dense screens.
+    srcset: view.thumb !== view.full && view.thumbWidth && view.width ? `${view.thumb} ${view.thumbWidth}w, ${view.full} ${view.width}w` : null,
+    sizes: '(min-width: 1024px) 33vw, 50vw',
+    alt,
+    loading: eager ? 'eager' : 'lazy',
+    decoding: 'async',
+    width: view.thumbWidth ?? view.width,
+    height: view.thumbHeight ?? view.height,
+    class: 'h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]',
+  });
+}
+
+function label(text, extra) {
+  return h('span', { class: `absolute bottom-2 left-2 text-[11px] uppercase tracking-wide px-2 py-1 ${extra}` }, text);
+}
+
+function card(item, index) {
+  const title = h('span', { class: 'block py-2 text-sm font-medium' }, item.title);
+  const base = { class: 'gallery-figure group', dataset: { galleryItem: '', id: item.id } };
+
+  if (item.kind === 'transformation') {
+    return h(
+      'a',
+      { ...base, href: item.after.full, class: 'gallery-figure group col-span-2 sm:col-span-1' },
+      h(
+        'span',
+        { class: 'grid grid-cols-2 gap-0.5' },
+        h('span', { class: 'relative block aspect-[3/4] overflow-hidden' }, img(item.before, `${item.altText} — before`), label('Before', 'bg-ink/85 text-ivory')),
+        h('span', { class: 'relative block aspect-[3/4] overflow-hidden' }, img(item.after, `${item.altText} — after`), label('After', 'bg-copper-dark text-ivory')),
+      ),
+      title,
+    );
+  }
+
+  if (item.kind === 'video') {
+    return h(
+      'a',
+      { ...base, href: item.video.full, 'aria-label': `${item.title} (video)` },
+      h(
+        'span',
+        { class: `relative block ${ratioClass(item.video.width, item.video.height)} overflow-hidden` },
+        h('img', { src: item.video.poster, alt: item.altText, loading: 'lazy', decoding: 'async', class: 'h-full w-full object-cover' }),
+        h('span', { class: 'absolute inset-0 flex items-center justify-center' }, h('span', { class: 'flex h-14 w-14 items-center justify-center rounded-full bg-ink/70 text-ivory' }, svgIcon(PLAY_ICON, { size: 22, fill: 'currentColor', strokeWidth: 0 }))),
+      ),
+      title,
+    );
+  }
+
+  const view = item.image;
+  return h(
+    'a',
+    { ...base, href: view.full },
+    h(
+      'span',
+      { class: `relative block ${ratioClass(view.width, view.height)} overflow-hidden` },
+      img(view, item.altText, { eager: index < 2 }),
+      item.featured ? h('span', { class: 'sr-only' }, 'Featured work') : null,
+    ),
+    title,
+  );
+}
+
+/** Mid-gallery booking band. Its label and behaviour are applied by the caller. */
+function ctaBand(settings) {
+  return h(
+    'div',
+    { dataset: { hideStickyCta: '' }, class: 'col-span-2 lg:col-span-3 flex flex-col sm:flex-row items-center justify-between gap-4 bg-ivory px-6 py-8 my-2 text-center sm:text-left' },
+    h('p', { class: 'text-xl font-display' }, 'Ready for your next look?'),
+    h('a', { href: '/booking/', class: 'btn-primary', dataset: { bookCta: '' } }, settings.cta_gallery_label),
+  );
+}
+
+/**
+ * @param {{ items: any[], categories: any[], settings: Record<string, any>, onRender?: (root: HTMLElement) => void }} ctx
+ */
+export function initGallery({ items, categories, settings, onRender }) {
+  const grid = document.querySelector('[data-gallery-grid]');
+  const filters = document.querySelector('[data-gallery-filters]');
+  const status = document.querySelector('[data-gallery-status]');
+  const emptyMsg = document.querySelector('[data-gallery-empty]');
+  if (!grid) return;
+
+  if (items.length === 0) {
+    grid.replaceChildren();
+    setVisible(grid, false);
+    setVisible(filters, false);
+    setVisible(emptyMsg, true);
+    return;
+  }
+  setVisible(emptyMsg, false);
+  setVisible(grid, true);
+
+  let active = 'all';
+  let current = items;
+
+  const lightbox = createLightbox(() => current);
+
+  function render() {
+    current = filterItems(items, active);
+    const nodes = current.map((item, i) => card(item, i));
+    if (current.length > CTA_AFTER) nodes.splice(CTA_AFTER, 0, ctaBand(settings));
+    mount(grid, nodes);
+    onRender?.(grid);
+    if (status) status.textContent = `Showing ${current.length} ${current.length === 1 ? 'cut' : 'cuts'}`;
+  }
+
+  const cats = visibleCategories(categories, items);
+  if (filters && cats.length > 0) {
+    const options = [{ slug: 'all', name: settings.gallery_all_label }, ...cats];
+    mount(
+      filters,
+      options.map((c) =>
+        h(
+          'button',
+          {
+            type: 'button',
+            class: 'filter-pill',
+            'aria-pressed': String(c.slug === active),
+            dataset: { filter: c.slug },
+            onClick: () => setFilter(c.slug),
+          },
+          c.name,
+        ),
+      ),
+    );
+    setVisible(filters, true);
+  } else {
+    setVisible(filters, false);
+  }
+
+  // One delegated handler survives every re-render.
+  grid.addEventListener('click', (event) => {
+    const link = event.target instanceof Element ? event.target.closest('[data-gallery-item]') : null;
+    if (!link) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return; // let "open in new tab" work
+    event.preventDefault();
+    const index = current.findIndex((i) => i.id === link.dataset.id);
+    if (index >= 0) lightbox.open(index, link);
+  });
+
+  function setFilter(slug) {
+    active = slug;
+    for (const b of filters?.querySelectorAll('[data-filter]') ?? []) b.setAttribute('aria-pressed', String(b.dataset.filter === active));
+    render();
+  }
+
+  /** Open the item named in a shared "#work/<id>" link, if it exists. */
+  function openFromHash() {
+    const id = idFromHash(location.hash);
+    if (!id || lightbox.isOpen()) return;
+    if (!items.some((i) => i.id === id)) return;
+    if (!current.some((i) => i.id === id)) setFilter('all');
+    const index = current.findIndex((i) => i.id === id);
+    const link = grid.querySelector(`[data-gallery-item][data-id="${CSS.escape(id)}"]`);
+    link?.scrollIntoView({ block: 'center' });
+    lightbox.open(index, link);
+  }
+
+  render();
+  openFromHash();
+  window.addEventListener('hashchange', openFromHash);
+}
+
+function createLightbox(getItems) {
+  const root = document.querySelector('[data-lightbox]');
+  if (!root) return { open() {}, isOpen: () => false };
+
+  const media = root.querySelector('[data-lightbox-media]');
+  const caption = root.querySelector('[data-lightbox-caption]');
+  const detail = root.querySelector('[data-lightbox-detail]');
+  const counter = root.querySelector('[data-lightbox-counter]');
+  const closeBtn = root.querySelector('[data-lightbox-close]');
+  const prevBtn = root.querySelector('[data-lightbox-prev]');
+  const nextBtn = root.querySelector('[data-lightbox-next]');
+  const backdropFlex = root.querySelector(':scope > div');
+
+  let index = 0;
+  let opener = null;
+  let touchX = null;
+  let inertNodes = [];
+  let isOpen = false;
+  let returnHash = '';
+
+  const lbImg = (view, alt) => h('img', { src: view.full, alt, class: 'max-h-[70vh] w-auto max-w-full object-contain', decoding: 'async' });
+  const tagged = (node, text, cls) => h('div', { class: 'relative' }, node, h('span', { class: `absolute bottom-2 left-2 text-xs uppercase tracking-wide px-2 py-1 ${cls}` }, text));
+
+  function show() {
+    const items = getItems();
+    const item = items[index];
+    if (!item) return;
+    stopVideo();
+    if (item.kind === 'transformation') {
+      mount(
+        media,
+        h(
+          'div',
+          { class: 'flex gap-2 max-h-[70vh]' },
+          tagged(lbImg(item.before, `${item.altText} — before`), 'Before', 'bg-ink/85 text-ivory'),
+          tagged(lbImg(item.after, `${item.altText} — after`), 'After', 'bg-copper-dark text-ivory'),
+        ),
+      );
+    } else if (item.kind === 'video') {
+      mount(
+        media,
+        h(
+          'video',
+          { controls: true, playsinline: true, preload: 'metadata', poster: item.video.poster, class: 'max-h-[70vh] max-w-full', 'aria-label': item.altText || item.title },
+          h('source', { src: item.video.full, type: item.video.mime }),
+        ),
+      );
+    } else {
+      mount(media, lbImg(item.image, item.altText));
+    }
+    caption.textContent = item.title;
+    detail.textContent = [item.serviceLabel, item.description].filter(Boolean).join(' · ');
+    setVisible(detail, Boolean(detail.textContent));
+    const single = items.length < 2;
+    setVisible(prevBtn, !single);
+    setVisible(nextBtn, !single);
+    if (counter) counter.textContent = single ? '' : `${index + 1} / ${items.length}`;
+    // Keep the address bar pointing at this piece so it can be copied and shared.
+    // replaceState: no history entry per image, and no "hashchange" loop.
+    history.replaceState(history.state, '', workHash(item.id));
+    if (!single) {
+      preload(items[(index + 1) % items.length]);
+      preload(items[(index - 1 + items.length) % items.length]);
+    }
+  }
+
+  /** Warm the browser cache for a neighbour so Next/Previous feel instant. */
+  function preload(item) {
+    const views = item?.kind === 'transformation' ? [item.before, item.after] : item?.kind === 'image' ? [item.image] : [];
+    for (const v of views) {
+      const pre = new Image();
+      pre.decoding = 'async';
+      pre.src = v.full;
+    }
+  }
+
+  function stopVideo() {
+    for (const v of media.querySelectorAll('video')) v.pause();
+  }
+
+  function open(i, trigger) {
+    index = i;
+    isOpen = true;
+    returnHash = idFromHash(location.hash) ? '#work' : location.hash;
+    opener = trigger;
+    show();
+    setVisible(root, true);
+    document.body.classList.add('overflow-hidden');
+    // Everything behind the dialog becomes inert, so keyboard and screen-reader
+    // users cannot wander into the page underneath.
+    inertNodes = [...document.body.children].filter((el) => el !== root && !['SCRIPT', 'STYLE', 'LINK'].includes(el.tagName));
+    for (const el of inertNodes) el.setAttribute('inert', '');
+    document.addEventListener('keydown', onKey);
+    closeBtn.focus();
+  }
+
+  function close() {
+    if (!isOpen) return;
+    isOpen = false;
+    stopVideo();
+    history.replaceState(history.state, '', `${location.pathname}${location.search}${returnHash}`);
+    setVisible(root, false);
+    document.body.classList.remove('overflow-hidden');
+    for (const el of inertNodes) el.removeAttribute('inert');
+    inertNodes = [];
+    document.removeEventListener('keydown', onKey);
+    // The grid may have been re-rendered while open; find the card again by id.
+    const id = getItems()[index]?.id;
+    const target = (id && document.querySelector(`[data-gallery-item][data-id="${CSS.escape(id)}"]`)) || opener;
+    if (target instanceof HTMLElement && document.contains(target)) target.focus();
+  }
+
+  function step(delta) {
+    const n = getItems().length;
+    if (n < 2) return;
+    index = (index + delta + n) % n;
+    show();
+  }
+
+  function onKey(event) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      close();
+    } else if (event.key === 'ArrowRight') {
+      step(1);
+    } else if (event.key === 'ArrowLeft') {
+      step(-1);
+    } else if (event.key === 'Tab') {
+      const focusable = [prevBtn, nextBtn, closeBtn, ...root.querySelectorAll('video[controls]')].filter((el) => el && !el.classList.contains('hidden'));
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+  }
+
+  closeBtn.addEventListener('click', close);
+  prevBtn.addEventListener('click', () => step(-1));
+  nextBtn.addEventListener('click', () => step(1));
+  root.addEventListener('click', (event) => {
+    // A click on the dark backdrop (not on media or buttons) closes.
+    if (event.target === root || event.target === backdropFlex) close();
+  });
+  root.addEventListener('touchstart', (e) => (touchX = e.changedTouches[0].clientX), { passive: true });
+  root.addEventListener(
+    'touchend',
+    (e) => {
+      if (touchX === null) return;
+      const dx = e.changedTouches[0].clientX - touchX;
+      touchX = null;
+      if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1);
+    },
+    { passive: true },
+  );
+
+  return { open, close, isOpen: () => isOpen };
+}

@@ -1,0 +1,66 @@
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<header id="site-header" data-site-header class="fixed inset-x-0 top-0 z-50 border-b border-ink/10 bg-paper/95 backdrop-blur transition-shadow duration-200">
+  <!-- Owner-managed announcement (Admin → Website Content → Announcement). Text only. -->
+  <div data-announcement class="hidden on-dark bg-ink text-ivory text-xs sm:text-sm" role="region" aria-label="Announcement">
+    <div class="container-editorial flex items-center justify-center gap-3 py-2 pr-10 relative text-center">
+      <p><span data-announcement-text></span> <a href="#" class="hidden underline underline-offset-2 font-semibold hover:text-copper whitespace-nowrap" data-announcement-link></a></p>
+      <button type="button" data-announcement-dismiss class="absolute right-1 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center text-ivory/80 hover:text-ivory" aria-label="Dismiss announcement">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="container-editorial flex h-16 items-center justify-between sm:h-20">
+    <a href="/" class="font-display text-lg sm:text-xl tracking-tight" data-bind="brand_name">HyrumHaircuts</a>
+
+    <nav class="hidden lg:flex items-center gap-8" aria-label="Primary">
+      <a href="/#work" class="text-sm font-medium tracking-wide hover:text-copper-dark transition-colors">Work</a>
+      <a href="/#about" data-nav-about class="hidden text-sm font-medium tracking-wide hover:text-copper-dark transition-colors">About</a>
+      <a href="/#services" data-nav-services class="hidden text-sm font-medium tracking-wide hover:text-copper-dark transition-colors">Services</a>
+      <a href="/#reviews" data-nav-reviews class="hidden text-sm font-medium tracking-wide hover:text-copper-dark transition-colors">Reviews</a>
+      <a href="/#faq" data-nav-faq class="hidden text-sm font-medium tracking-wide hover:text-copper-dark transition-colors">FAQ</a>
+      <a href="/#contact" data-nav-contact class="hidden text-sm font-medium tracking-wide hover:text-copper-dark transition-colors">Contact</a>
+    </nav>
+
+    <div class="hidden lg:flex items-center gap-4">
+      <a href="/booking/" class="btn-primary" data-book-cta data-bind="cta_book_label">Book Your Next Cut</a>
+    </div>
+
+    <button
+      type="button"
+      class="lg:hidden inline-flex h-11 w-11 items-center justify-center"
+      data-mobile-menu-toggle
+      aria-expanded="false"
+      aria-controls="mobile-menu"
+      aria-label="Menu"
+    >
+      <svg data-menu-icon-open width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
+      <svg data-menu-icon-close width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" class="hidden"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+</header>
+
+<!--
+  The mobile menu is a sibling of <header>, not a child: the header uses
+  backdrop-blur, which would make it the containing block for this fixed
+  element and collapse it to the header's own height.
+-->
+<div id="mobile-menu" data-mobile-menu class="hidden lg:hidden fixed inset-0 top-16 sm:top-20 z-40 bg-paper overflow-y-auto">
+  <nav class="container-editorial flex flex-col gap-1 py-6" aria-label="Mobile">
+    <a href="/#work" data-mobile-link class="py-4 text-xl font-display border-b border-ink/10">Work</a>
+    <a href="/#about" data-mobile-link data-nav-about class="hidden py-4 text-xl font-display border-b border-ink/10">About</a>
+    <a href="/#services" data-mobile-link data-nav-services class="hidden py-4 text-xl font-display border-b border-ink/10">Services</a>
+    <a href="/#reviews" data-mobile-link data-nav-reviews class="hidden py-4 text-xl font-display border-b border-ink/10">Reviews</a>
+    <a href="/#faq" data-mobile-link data-nav-faq class="hidden py-4 text-xl font-display border-b border-ink/10">FAQ</a>
+    <a href="/#contact" data-mobile-link data-nav-contact class="hidden py-4 text-xl font-display border-b border-ink/10">Contact</a>
+    <a href="/booking/" class="btn-primary mt-6 w-full" data-book-cta data-bind="cta_book_label">Book Your Next Cut</a>
+  </nav>
+</div>
+
+<a
+  href="/booking/"
+  data-sticky-booking-cta
+  data-book-cta
+  data-bind="cta_book_label"
+  class="lg:hidden fixed inset-x-0 bottom-0 z-40 btn-primary rounded-none justify-center py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+>Book Your Next Cut</a>

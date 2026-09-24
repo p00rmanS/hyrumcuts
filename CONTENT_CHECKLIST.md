@@ -1,63 +1,55 @@
-# Content Checklist — What Hyrum Needs to Provide Before Launch
+# Content checklist: what Hyrum still needs to provide
 
-Everything on the live site today (bio, photos, reviews, contact info) is an obviously-fake development placeholder. Nothing below was invented as if it were real — it's either blank (hidden automatically) or clearly labeled as a placeholder. Here's what's needed to replace it, and exactly where each item goes.
+The site launches **full of placeholder content** (the same sample photos, portrait, bio, reviews and FAQ answers the original site had), so it looks complete from the start. Hyrum swaps each one for his own; the admin **Dashboard** keeps a live list of what is left and marks each with a "Placeholder: replace me" badge. Nothing was invented: contact details, addresses, prices and ratings stay blank (and their sections hidden) until he adds them. Add everything below yourself in `/admin` (see `CMS_OWNER_GUIDE.md`); none of it needs a developer.
 
 ## Media
 
-- [ ] **Landscape cutting video**, ~10 seconds, muted-friendly (no audio needed), ideally 1920×1080 or wider. Export as both `hero.mp4` (H.264) and `hero.webm` if possible. Place at `public/assets/video/hero.mp4` / `hero.webm`. See README "Replacing the hero video" for exact encoding recommendations.
-- [ ] **Hero poster image** — a single strong still frame from the video, 1600×900 or larger. Replace `public/assets/images/placeholders/hero-poster.jpg`.
-- [ ] **12–24 strong haircut photos**, ideally the original uncompressed files (the admin gallery tool will resize/optimize on upload). A mix of portrait, square, and landscape shots so the grid doesn't look repetitive.
-- [ ] **Before/after pairs**, clearly labeled which photo is which, for the Transformations category.
-- [ ] **A real portrait of Hyrum** for the About section. Replace `public/assets/images/placeholders/about-portrait.jpg`.
-- [ ] **Logo/wordmark preference** — right now the header/footer just render the brand name as text. If there's a real logo, supply an SVG or high-res PNG.
-- [ ] **Favicon source** — a simple square mark works best. Replace `public/assets/images/favicon.png` (512×512) and regenerate a real multi-size `.ico` (see README).
-- [ ] **Social preview image** for link previews (Open Graph), 1200×630. Replace `public/assets/images/placeholders/og-image.jpg`.
+- [ ] **12–24 strong haircut photos.** A mix of portrait, square and landscape. Real work only. *Add → Photos.*
+- [ ] **Before/after pairs**, clearly labelled which is which, for the Transformations category. *Add → Before & after.*
+- [ ] **Hero video**: landscape, 10–20 seconds, MP4, muted-friendly, ideally 1080p and under 20 MB. *Hero.*
+  - Right now the site plays the **starter clip** that was already on the old site. The dashboard reminds you until you replace it.
+- [ ] **Hero poster image**: a strong still from the video (automatic, or choose your own). *Hero.*
+- [ ] **Portrait of Hyrum** with a short description of the photo. *Media → Profile Photo.*
+- [ ] **Final social/share image** (1200×630 crop is automatic). *Settings → SEO.*
+- [ ] Optional: logo/wordmark preference, and a favicon source (currently plain text brand + a generated placeholder favicon; the file is `web/public/assets/images/favicon.png`, so this one needs the developer).
 
-## Gallery content
+## Approved wording
 
-- [ ] Confirm or adjust the gallery categories (currently: Fades, Tapers, Textured, Long Hair, Beards, Transformations) — editable in `/admin/gallery`.
-- [ ] Confirm the service/cut type list (currently generic placeholders: Classic Haircut, Skin Fade, Taper Fade, Textured Crop, Beard Trim & Lineup, Haircut + Beard Combo, Kids Haircut) — editable in `/admin/services`. No prices are ever shown; this list only feeds the booking form.
+- [ ] **Biography.** The starter paragraph is showing (same as the old site). Replace it with your approved bio. *Website Content → About.*
+- [ ] Specialties, general location (city/area, and whether a street address may be public), availability note, preferred contact method.
+- [ ] Approved **category names** and item titles. Starter categories: Fades, Tapers, Textured, Long Hair, Beards, Transformations. Rename, add or hide as you like.
+- [ ] **FAQ answers.** Three general answers are live. **Two say `[Owner to review…]` and need your real wording:** what to bring as a reference photo, and your reschedule/cancellation policy. *Website Content → FAQ.*
+- [ ] **Services** you offer, each with a one-line description (starter list: Classic Haircut, Skin Fade, Taper Fade, Textured Crop, Beard Trim & Lineup, Haircut + Beard Combo, Kids Haircut). They show in the home page's Services section and on the request form. Edit, reorder or remove. No prices are shown anywhere. *Settings → Services.*
+- [ ] Time windows on the request form (default: Morning / Early afternoon / Late afternoon / Evening). *Settings → Booking Link.*
 
-## About Hyrum
+- [ ] Optional: an **announcement** for time away or holiday hours, with start and end dates so it switches itself on and off. *Website Content → Announcement.*
 
-- [ ] Approved biography text (a safe generic placeholder is live now) — editable in `/admin/settings`.
-- [ ] Specialties (left blank/hidden until provided).
-- [ ] Preferred city / general service area, and whether a full street address may be shown publicly.
-- [ ] Availability note (e.g. "Tuesday–Saturday") and preferred contact method.
+## Contact, social and booking
 
-## Contact & social
-
-- [ ] Business phone number.
-- [ ] Business email address.
-- [ ] Instagram profile URL.
-- [ ] Facebook profile URL.
-- [ ] Google Maps (or similar) link, if directions should be offered.
-
-## Scheduling
-
-- [ ] **Calendly URL (or a Google Calendar Appointment Schedule link, which works the same way).** A temporary demo link (`https://calendly.com/jamesbaldwindean2026/new-meeting`) is currently configured in `/admin/settings` and `.env` — **replace this with Hyrum's real scheduling link before launch.** Until replaced, the site is not booking against Hyrum's real calendar.
-- [ ] Preferred time-of-day windows shown on the request-only form (currently: Morning / Early afternoon / Late afternoon / Evening) — editable in `/admin/settings`.
-- [ ] Cancellation/rescheduling policy text — editable in `/admin/settings`, also feeds the FAQ answer.
-- [ ] SMS/text confirmation: the site never claims to send a text unless a real SMS provider is wired up (it isn't, by default). Decide whether text confirmations happen manually or via a future integration.
+- [ ] Business **phone number** and public **email**. *Settings → Contact.* (The Contact section stays hidden until at least one is added.)
+- [ ] Email for privacy requests (optional; falls back to the public email). The privacy page currently tells people to use the contact details on the site.
+- [ ] Google Maps / directions link, if you want a "Get directions" link.
+- [ ] **Instagram** and **Facebook** links. *Settings → Social Links.*
+- [ ] **Calendly (or other booking) link.** *Settings → Booking Link.* The old site used a **temporary demo link** (`calendly.com/jamesbaldwindean2026/…`). That link is **not** carried over: enter Hyrum's real one. Until then the Book buttons go to the on-site request form.
+- [ ] Turn on **Netlify Forms email notifications** so appointment requests reach you (Netlify → Forms). *(developer/Netlify setting)*
 
 ## Reviews
 
-- [ ] Real client reviews, with permission to publish, to replace the three `[Placeholder review]`-labeled entries. Add/edit in `/admin/reviews`; only approved reviews are shown.
+- [ ] Real reviews **with each client's permission**, first name or initial only. *Reviews → Add review → turn on "Approved and shown".* The three `[Placeholder review]` examples are showing until you replace or delete them; never leave them up at launch.
 
-## FAQ
+## Domain and SEO
 
-- [ ] Two FAQ answers are explicitly marked `[Owner to review: ...]` in the seed data (what to bring as a reference photo, and the reschedule/cancellation policy) — fill these in via `/admin/settings`.
+- [ ] Preferred domain confirmed (`hyrumhaircuts.com`) and connected in Netlify. *(developer)*
+- [ ] Page title and description you're happy with. *Settings → SEO.*
+- [ ] Main website address once the domain is live. *Settings → SEO.*
 
-## Legal / privacy
+## Privacy
 
-- [ ] A contact email or process for privacy/data-deletion requests (`privacy_contact_email` in settings; falls back to the general contact email if blank).
-- [ ] Confirm the data-retention approach described in `/privacy` matches what the business actually wants to do with booking history.
+- [ ] Confirm the wording on the privacy page matches how you actually handle appointment requests.
+- [ ] Decide how long you keep requests and who handles deletion requests.
 
-## Automation (planned, not yet built)
+## For the developer (see README)
 
-- [ ] The brief mentions an **n8n automation** will be added soon (e.g., to notify Hyrum of new requests, sync confirmed bookings to Google Calendar, or read Calendly webhooks). No n8n workflow is included in this project — coordinate the integration point (likely the admin bookings list, or a small JSON export endpoint) when that's ready.
-
-## Hosting
-
-- [ ] Desired domain name.
-- [ ] Production hosting details (a standard PHP/Apache or Nginx host with SQLite or MySQL — see README "Deployment").
+- [ ] Create the Supabase project, apply migrations, register the owner, disable public sign-ups, configure SMTP.
+- [ ] Set the four Netlify environment variables and deploy.
+- [ ] Do not launch while the dashboard still lists placeholders (photos, `[Placeholder review]`, `[Owner to review…]`, bio, portrait, starter hero clip).

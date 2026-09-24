@@ -1,0 +1,44 @@
+<footer class="bg-ink text-ivory on-dark">
+  <div class="container-editorial py-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+    <div>
+      <p class="font-display text-xl mb-3" data-bind="brand_name">HyrumHaircuts</p>
+      <p class="text-sm text-ivory/75 hidden" data-show-if="location_general" data-bind="location_general"></p>
+    </div>
+
+    <nav aria-label="Footer">
+      <p class="eyebrow mb-3">Explore</p>
+      <ul class="space-y-2 text-sm">
+        <li><a href="/#work" class="hover:text-copper">Work</a></li>
+        <li class="hidden" data-nav-about><a href="/#about" class="hover:text-copper">About</a></li>
+        <li class="hidden" data-nav-services><a href="/#services" class="hover:text-copper">Services</a></li>
+        <li class="hidden" data-nav-reviews><a href="/#reviews" class="hover:text-copper">Reviews</a></li>
+        <li class="hidden" data-nav-faq><a href="/#faq" class="hover:text-copper">FAQ</a></li>
+        <li><a href="/privacy/" class="hover:text-copper">Privacy Notice</a></li>
+      </ul>
+    </nav>
+
+    <div class="hidden" data-footer-contact>
+      <p class="eyebrow mb-3">Contact</p>
+      <ul class="space-y-2 text-sm">
+        <li class="hidden" data-footer-phone><a href="#" class="hover:text-copper" data-bind="phone" data-href-kind="tel"></a></li>
+        <li class="hidden" data-footer-email><a href="#" class="hover:text-copper" data-bind="email" data-href-kind="mailto"></a></li>
+      </ul>
+    </div>
+
+    <div class="hidden" data-footer-social>
+      <p class="eyebrow mb-3">Follow</p>
+      <div class="flex flex-row items-center gap-4" data-social-icons></div>
+    </div>
+
+    <div>
+      <a href="/booking/" class="btn-ghost" data-book-cta data-bind="cta_book_label">Book Your Next Cut</a>
+    </div>
+  </div>
+
+  <div class="border-t border-ivory/10">
+    <div class="container-editorial py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-ivory/70">
+      <p>&copy; <span data-year></span> <span data-bind="brand_name">HyrumHaircuts</span>. All rights reserved.</p>
+      <p class="hidden" data-show-if="credit_text" data-bind="credit_text"></p>
+    </div>
+  </div>
+</footer>

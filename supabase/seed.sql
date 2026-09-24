@@ -1,0 +1,11 @@
+-- supabase/seed.sql: intentionally empty of content.
+--
+-- `supabase db reset` runs this file after the migrations. Nothing here is
+-- needed: registering the owner (scripts/bootstrap-owner.mjs) creates the
+-- editable settings row, starter bio, categories, FAQs, placeholder reviews
+-- and services (see migrations/*_owner_bootstrap.sql).
+--
+-- The starter placeholder photos and portrait are files, so they are loaded
+-- into Storage by scripts/seed-starter-content.mjs (run automatically by
+-- scripts/bootstrap-owner.mjs). That keeps this file free of passwords and keys.
+select 1;

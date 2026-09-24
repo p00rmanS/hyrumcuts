@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HyrumHaircuts — Precision Cuts, Personal Style</title>
+  <meta name="description" content="Browse the HyrumHaircuts portfolio of fades, tapers and textured cuts, then book your next haircut.">
+  <link rel="canonical" href="https://hyrumhaircuts.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="HyrumHaircuts">
+  <meta property="og:title" content="HyrumHaircuts — Precision Cuts, Personal Style">
+  <meta property="og:description" content="Browse the HyrumHaircuts portfolio of fades, tapers and textured cuts, then book your next haircut.">
+  <meta property="og:url" content="https://hyrumhaircuts.com/">
+  <meta property="og:image" content="https://hyrumhaircuts.com/assets/images/placeholders/og-image.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="/assets/images/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/images/favicon-192.png">
+  <script type="module" src="/src/public-site/home.js"></script>
+</head>
+<body class="bg-paper text-ink">
+  <!-- @include header.html -->
+
+  <main id="main-content">
+
+    <!-- ===================== HERO ===================== -->
+    <section data-hero class="on-dark relative h-[92vh] min-h-[560px] w-full overflow-hidden bg-ink text-ivory grain-overlay">
+      <!-- Media is attached by JavaScript once the owner's hero settings are known,
+           so the wrong video is never downloaded first. -->
+      <video
+        data-hero-video
+        class="hero-media absolute inset-0 h-full w-full object-cover"
+        preload="metadata"
+        muted
+        loop
+        playsinline
+        aria-hidden="true"
+        tabindex="-1"
+      ></video>
+      <img
+        data-hero-fallback
+        src="/assets/images/placeholders/hero-poster.jpg"
+        alt=""
+        class="hero-media absolute inset-0 h-full w-full object-cover hidden"
+        width="1600" height="900"
+      >
+
+      <div class="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/30 to-ink/50"></div>
+
+      <div class="relative z-10 flex h-full flex-col justify-end pb-24 sm:pb-28">
+        <div class="container-editorial">
+          <p class="eyebrow !text-ivory mb-4" data-bind="hero_eyebrow">Precision cuts. Personal style.</p>
+          <h1 class="text-4xl sm:text-6xl lg:text-7xl leading-[1.05] max-w-3xl mb-5" data-bind="hero_heading">A sharper look, cut for you.</h1>
+          <p class="text-base sm:text-lg text-ivory/90 max-w-xl mb-8" data-bind="hero_subheading">Modern cuts, clean fades, and detail-first grooming by Hyrum.</p>
+          <div class="flex flex-wrap items-center gap-4">
+            <a href="/booking/" class="btn-primary" data-book-cta data-bind="cta_book_label">Book Your Next Cut</a>
+            <a href="#work" class="btn-ghost" data-bind="cta_view_work_label">View My Work</a>
+          </div>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        data-hero-toggle
+        class="absolute bottom-6 right-5 sm:right-8 z-10 hidden h-11 w-11 items-center justify-center rounded-full border border-ivory/60 text-ivory hover:bg-ivory hover:text-ink transition-colors"
+        aria-label="Pause background video"
+        aria-pressed="false"
+      >
+        <svg data-icon-pause width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="3" y="2" width="3" height="12"/><rect x="10" y="2" width="3" height="12"/></svg>
+        <svg data-icon-play width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" class="hidden"><path d="M4 2l10 6-10 6V2z"/></svg>
+      </button>
+    </section>
+
+    <!-- ===================== GALLERY ===================== -->
+    <section id="work" class="py-20 sm:py-28" aria-labelledby="work-heading">
+      <div class="container-editorial">
+        <div class="max-w-2xl mb-10">
+          <p class="eyebrow mb-3">Featured Work</p>
+          <h2 id="work-heading" class="text-3xl sm:text-4xl">Every cut tells the fit, not just the trend.</h2>
+        </div>
+
+        <div class="hidden flex gap-2 overflow-x-auto pb-2 mb-6 -mx-5 px-5 sm:mx-0 sm:px-0 sm:flex-wrap" role="group" aria-label="Filter gallery by category" data-gallery-filters></div>
+        <p class="sr-only" role="status" aria-live="polite" data-gallery-status></p>
+
+        <!-- Skeleton tiles reserve the grid's space while content loads. -->
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5" data-gallery-grid>
+          <div class="skeleton aspect-[3/4]" data-skeleton aria-hidden="true"></div>
+          <div class="skeleton aspect-[3/4]" data-skeleton aria-hidden="true"></div>
+          <div class="skeleton aspect-[3/4] hidden lg:block" data-skeleton aria-hidden="true"></div>
+          <div class="skeleton aspect-[3/4]" data-skeleton aria-hidden="true"></div>
+          <div class="skeleton aspect-[3/4]" data-skeleton aria-hidden="true"></div>
+          <div class="skeleton aspect-[3/4] hidden lg:block" data-skeleton aria-hidden="true"></div>
+        </div>
+
+        <p class="hidden text-muted py-16 text-center" data-gallery-empty>New work is being added. Check back soon.</p>
+        <p class="hidden text-muted py-16 text-center" role="alert" data-gallery-error>
+          The gallery couldn't load right now. Please refresh the page in a moment.
+        </p>
+      </div>
+    </section>
+
+    <!-- Lightbox (single instance, populated by JavaScript) -->
+    <div
+      id="lightbox"
+      data-lightbox
+      class="on-dark fixed inset-0 z-[60] hidden bg-ink/95"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="lightbox-caption"
+    >
+      <button type="button" data-lightbox-close class="absolute top-4 right-4 sm:top-6 sm:right-6 h-11 w-11 flex items-center justify-center text-ivory hover:text-copper" aria-label="Close image viewer">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
+      </button>
+      <button type="button" data-lightbox-prev class="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 h-11 w-11 flex items-center justify-center text-ivory hover:text-copper" aria-label="Previous image">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button type="button" data-lightbox-next class="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 h-11 w-11 flex items-center justify-center text-ivory hover:text-copper" aria-label="Next image">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+
+      <div class="flex h-full items-center justify-center px-4 sm:px-20">
+        <figure class="max-h-[85vh] max-w-full text-center">
+          <div data-lightbox-media class="flex items-center justify-center gap-2 max-h-[70vh]"></div>
+          <figcaption id="lightbox-caption" data-lightbox-caption class="mt-4 text-ivory text-sm sm:text-base"></figcaption>
+          <p data-lightbox-detail class="mt-1 text-ivory/80 text-sm max-w-xl mx-auto"></p>
+          <p data-lightbox-counter class="mt-2 text-ivory/60 text-xs tracking-wide tabular-nums"></p>
+        </figure>
+      </div>
+    </div>
+
+    <!-- ===================== ABOUT (hidden until Hyrum adds content) ===================== -->
+    <section id="about" class="hidden py-20 sm:py-28 bg-ivory" data-about aria-labelledby="about-heading">
+      <div class="container-editorial grid gap-10 lg:grid-cols-2 lg:gap-16 items-center">
+        <div class="relative aspect-[4/5] overflow-hidden order-2 lg:order-1 hidden bg-stone/20" data-about-photo-wrap>
+          <img data-about-photo src="" alt="" loading="lazy" decoding="async" class="h-full w-full object-cover" width="1280" height="1600">
+        </div>
+        <div class="order-1 lg:order-2" data-about-text>
+          <p class="eyebrow mb-3">About <span data-bind="barber_name">Hyrum</span></p>
+          <h2 id="about-heading" class="text-3xl sm:text-4xl mb-6" data-bind="about_heading">The barber behind the chair.</h2>
+          <p class="text-lg leading-relaxed mb-6 whitespace-pre-line hidden" data-show-if="about_bio" data-bind="about_bio"></p>
+
+          <dl class="space-y-3 mb-8 text-sm">
+            <div class="hidden" data-show-if="about_specialties"><dt class="font-semibold inline">Specialties: </dt><dd class="inline text-muted" data-bind="about_specialties"></dd></div>
+            <div class="hidden" data-show-if="location_general"><dt class="font-semibold inline">Location: </dt><dd class="inline text-muted" data-bind="location_general"></dd></div>
+            <div class="hidden" data-show-if="availability_note"><dt class="font-semibold inline">Availability: </dt><dd class="inline text-muted" data-bind="availability_note"></dd></div>
+            <div class="hidden" data-show-if="preferred_contact"><dt class="font-semibold inline">Preferred contact: </dt><dd class="inline text-muted" data-bind="preferred_contact"></dd></div>
+          </dl>
+
+          <a href="#" target="_blank" rel="noopener noreferrer" class="btn-secondary hidden" data-instagram-cta>See More Cuts on Instagram<span class="sr-only"> (opens in a new tab)</span></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SERVICES (hidden until services are published) ===================== -->
+    <section id="services" class="hidden py-20 sm:py-28" data-services aria-labelledby="services-heading">
+      <div class="container-editorial">
+        <div class="max-w-2xl mb-10">
+          <p class="eyebrow mb-3">Services</p>
+          <h2 id="services-heading" class="text-3xl sm:text-4xl">What I can do for you.</h2>
+        </div>
+        <ul class="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3" data-services-list></ul>
+        <div class="mt-10">
+          <a href="/booking/" class="btn-secondary" data-book-cta data-bind="cta_book_label">Book Your Next Cut</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== REVIEWS (hidden until approved reviews exist) ===================== -->
+    <section id="reviews" class="hidden py-20 sm:py-28" data-reviews aria-labelledby="reviews-heading">
+      <div class="container-editorial">
+        <div class="max-w-2xl mb-10">
+          <p class="eyebrow mb-3">Reviews</p>
+          <h2 id="reviews-heading" class="text-3xl sm:text-4xl">What clients say.</h2>
+        </div>
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-reviews-list></div>
+      </div>
+    </section>
+
+    <!-- ===================== INSTAGRAM (only with an Instagram link) ===================== -->
+    <section class="hidden py-20 sm:py-28 bg-ivory" data-instagram aria-labelledby="instagram-heading">
+      <div class="container-editorial text-center">
+        <p class="eyebrow mb-3">Instagram</p>
+        <h2 id="instagram-heading" class="text-3xl sm:text-4xl mb-8">Follow along for more.</h2>
+        <div class="grid grid-cols-3 gap-1 sm:gap-2 mb-8 hidden" data-instagram-grid></div>
+        <a href="#" target="_blank" rel="noopener noreferrer" class="btn-secondary" data-instagram-cta>Visit Instagram<span class="sr-only"> (opens in a new tab)</span></a>
+      </div>
+    </section>
+
+    <!-- ===================== BOOKING BANNER ===================== -->
+    <section data-hide-sticky-cta class="on-dark py-20 sm:py-24 bg-ink text-ivory grain-overlay">
+      <div class="container-editorial text-center max-w-2xl mx-auto">
+        <h2 class="text-3xl sm:text-4xl mb-8">Ready for a fresh cut?</h2>
+        <a href="/booking/" class="btn-primary" data-book-cta data-bind="cta_banner_label">Reserve Your Chair</a>
+      </div>
+    </section>
+
+    <!-- ===================== FAQ (hidden until FAQs are published) ===================== -->
+    <section id="faq" class="hidden py-20 sm:py-28" data-faq aria-labelledby="faq-heading">
+      <div class="container-editorial max-w-3xl">
+        <p class="eyebrow mb-3">FAQ</p>
+        <h2 id="faq-heading" class="text-3xl sm:text-4xl mb-8">Good to know before you book.</h2>
+        <div data-accordion class="border-t border-ink/10"></div>
+      </div>
+    </section>
+
+    <!-- ===================== CONTACT (hidden until details exist) ===================== -->
+    <section id="contact" class="hidden py-20 sm:py-28 bg-ivory" data-contact aria-labelledby="contact-heading">
+      <div class="container-editorial max-w-2xl">
+        <p class="eyebrow mb-3">Contact</p>
+        <h2 id="contact-heading" class="text-3xl sm:text-4xl mb-6">Find <span data-bind="barber_name">Hyrum</span>.</h2>
+        <ul class="space-y-3 text-lg">
+          <li class="hidden" data-show-if="location_general" data-bind="location_general"></li>
+          <li class="hidden" data-contact-phone><a href="#" class="hover:text-copper-dark" data-bind="phone" data-href-kind="tel"></a></li>
+          <li class="hidden" data-contact-email><a href="#" class="hover:text-copper-dark" data-bind="email" data-href-kind="mailto"></a></li>
+          <li class="hidden" data-contact-map><a href="#" target="_blank" rel="noopener noreferrer" class="hover:text-copper-dark underline" data-map-link>Get directions<span class="sr-only"> (opens in a new tab)</span></a></li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- @include footer.html -->
+</body>
+</html>

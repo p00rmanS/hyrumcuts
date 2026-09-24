@@ -1,6 +1,31 @@
-# Netlify cannot run PHP, so it publishes the prebuilt static site in dist/.
-# Regenerate dist/ locally after changing content or views (see README,
-# "Deploying to Netlify") and commit it; there is nothing to build on Netlify.
+# HyrumHaircuts on Netlify.
+#
+# The site is a static build (Vite). Published CMS content is fetched from
+# Supabase by the visitor's browser on every page load, so changes made in
+# /admin appear WITHOUT a rebuild or redeploy.
+#
+# Required environment variables (Site configuration > Environment variables):
+#   VITE_SUPABASE_URL              your Supabase project URL
+#   VITE_SUPABASE_PUBLISHABLE_KEY  your publishable key (sb_publishable_...)
+#   VITE_SITE_SLUG                 hyrumhaircuts
+#   VITE_SITE_URL                  https://hyrumhaircuts.com
+# Never add a secret / service_role key here: every VITE_* value is public.
+
 [build]
+  command = "npm run build"
   publish = "dist"
-  command = "echo 'Publishing prebuilt dist/'"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# /admin is a single-page app: every admin URL (including a browser refresh on
+# /admin/portfolio/123) must be served the admin shell. Real files, such as
+# the fingerprinted assets, still win because this rewrite is not forced.
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/index.html"
+  status = 200
+
+# Security headers, the Content-Security-Policy, admin no-index/no-store rules
+# and the deploy-preview no-index rule are generated into dist/_headers by
+# scripts/netlify-headers.js so the CSP always matches VITE_SUPABASE_URL.
