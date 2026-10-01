@@ -13,6 +13,10 @@ export function computeWarnings(settings, counts, placeholders) {
   const out = [];
   const empty = (v) => !String(v ?? '').trim();
 
+  if (counts.newRequests > 0) {
+    out.push({ id: 'requests', level: 'warn', message: `You have ${counts.newRequests} new appointment ${counts.newRequests === 1 ? 'request' : 'requests'} waiting for a reply.`, href: '/admin/requests?status=new', cta: 'View requests' });
+  }
+
   // The big one: the site launched with starter content, and this is the to-do list for replacing it.
   if (placeholders?.total > 0) {
     const parts = [

@@ -11,8 +11,8 @@ The public website and owner-managed CMS for barber **Hyrum**.
 | Database | Supabase PostgreSQL with Row Level Security |
 | Auth | Supabase Auth (email + password, single owner, no public sign-up) |
 | Media | Supabase Storage (`site-media` bucket, TUS resumable uploads for large video) |
-| Hosting | Netlify (static build) |
-| Booking | Calendly (unchanged) + Netlify Forms for the request form |
+| Hosting | GitHub Pages (static build, deployed by GitHub Actions) at https://p00rmans.github.io/hyrumcuts/. Netlify still works too (`netlify.toml`). |
+| Booking | Calendly (unchanged) + an on-site request form whose requests land in a private **Requests** inbox in `/admin` (Supabase) |
 
 > `legacy-php/` is the previous PHP + SQLite site, kept for reference only. It is **not deployed**. See [`legacy-php/README.md`](legacy-php/README.md).
 
@@ -24,7 +24,7 @@ The public website and owner-managed CMS for barber **Hyrum**.
 Visitor's browser                            Owner's browser (/admin)
    │  anon key, read-only                      │  owner's session (JWT)
    ▼                                           ▼
- Netlify (static files, security headers) ── Supabase ─────────────────────────────┐
+ GitHub Pages (static files) ──────────────── Supabase ─────────────────────────────┐
                                              ├─ PostgREST  → PostgreSQL (RLS decides everything)
                                              ├─ Auth       → the one owner account
                                              └─ Storage    → public-read bucket, owner-only writes
@@ -56,7 +56,8 @@ scripts/
   seed-starter-content.mjs  load the placeholder photos + portrait (Hyrum then replaces them)
   verify-security.mjs     end-to-end RLS + Storage verification against a real stack
   netlify-headers.js      generates _headers (CSP), robots.txt, sitemap.xml
-netlify.toml              build + /admin rewrite
+.github/workflows/        deploy-pages.yml: lint + test + build + publish to GitHub Pages
+netlify.toml              build + /admin rewrite (only if hosting on Netlify instead)
 CMS_OWNER_GUIDE.md        plain-language guide for Hyrum
 CONTENT_CHECKLIST.md      what Hyrum still needs to provide
 ```
@@ -72,6 +73,7 @@ CONTENT_CHECKLIST.md      what Hyrum still needs to provide
 | `…000300_admin_audit_log` | append-only audit log written only by triggers; stores column *names*, never values |
 | `…000400_storage_media` | `site-media` bucket (public read, 50 MiB, MIME allow-list), owner-only object policies, `storage_cleanup_queue` |
 | `…000500_owner_bootstrap` | first-run starter content (bio, FAQ answers, placeholder reviews, categories, services) and `private.bootstrap_owner(email)` |
+| `20260930000100_appointment_requests` | the booking-form inbox: visitors may only insert (column-level grants), only the owner can read / change status / delete; server-set owner and status; a site-wide flood limit; never audit-logged |
 | `20260923000100_site_announcement` | announcement-bar columns on `site_settings` (text, optional https link, optional start/end dates) |
 
 > **Deploy order:** apply migrations *before* deploying a frontend that uses them. The public site selects every settings column it knows about; if a column is missing, the settings request fails and the site falls back to its bundled brand copy.
@@ -143,10 +145,11 @@ The starter text and images are defined once in `web/src/lib/starter-content.js`
 
 | Variable | Where | Secret? |
 |---|---|---|
-| `VITE_SUPABASE_URL` | `.env`, Netlify | no |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | `.env`, Netlify | no (publishable). Legacy `anon` keys work too. |
-| `VITE_SITE_SLUG` | `.env`, Netlify | no |
-| `VITE_SITE_URL` | `.env`, Netlify | no (used for `robots.txt` / `sitemap.xml`) |
+| `VITE_SUPABASE_URL` | `.env`, GitHub repo variable | no |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | `.env`, GitHub repo variable | no (publishable). Legacy `anon` keys work too. |
+| `VITE_SITE_SLUG` | `.env` (the workflow sets it) | no |
+| `VITE_SITE_URL` | `.env`, GitHub repo variable (optional) | no (canonical/share URLs, `sitemap.xml`) |
+| `VITE_BASE_PATH` | GitHub repo variable (optional, default `/hyrumcuts/`) | no. `/` for a domain root. In Git Bash prefix the build with `MSYS_NO_PATHCONV=1`. |
 | `SUPABASE_SECRET_KEY` | your shell only, for `bootstrap-owner` / `verify-security` | **yes, never committed or deployed** |
 
 ### Commands
@@ -201,7 +204,30 @@ Hyrum uses **"Forgot your password?"** on `/admin/login`. If the email is unreac
 
 ---
 
-## 4. Deploying to Netlify
+## 4. Deploying to GitHub Pages
+
+The site is published from the `main` branch by [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml): lint and unit tests must pass, then it builds and publishes `dist/`.
+
+1. **Apply the migrations** to the Supabase project *before* the first deploy (`npx supabase link --project-ref <ref>` then `npx supabase db push`), and register the owner (section 3).
+2. GitHub → repo **Settings → Pages → Source: GitHub Actions**.
+3. **Settings → Secrets and variables → Actions → Variables**: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. These are public values, so use *Variables*, not *Secrets*. **Never a secret key.** Optional: `VITE_BASE_PATH` (default `/hyrumcuts/`), `VITE_SITE_URL` (default `https://p00rmans.github.io/hyrumcuts`).
+4. Push to `main` (or run the workflow from the Actions tab). The site appears at https://p00rmans.github.io/hyrumcuts/.
+5. Supabase → **Authentication → URL Configuration**: Site URL `https://p00rmans.github.io/hyrumcuts/`, and add `https://p00rmans.github.io/hyrumcuts/admin/reset-password` to Redirect URLs (password reset emails).
+
+How GitHub Pages differs from a host with server config, and what the build does about it:
+
+| Netlify feature | On GitHub Pages |
+|---|---|
+| `/admin/*` rewrite | `404.html` loads `spa-redirect.js` first, which sends any `/admin/...` address to `/admin/`; the admin restores it. Direct visits and refreshes of any admin URL work. |
+| `_headers` CSP | The same policy is injected as a `<meta http-equiv="Content-Security-Policy">` tag in every page, plus a referrer-policy meta tag. |
+| `X-Frame-Options: DENY` / `frame-ancestors` | Not possible in a meta tag; the admin refuses to run inside a frame instead (`admin/main.js`). |
+| HSTS, `Permissions-Policy`, `no-store` on /admin | Not available. GitHub Pages serves HTTPS only. The admin is still `noindex`. |
+| Netlify Forms | Replaced by the **Requests** inbox (Supabase table, insert-only for visitors). |
+| Sub-path | Every root-relative link gets the base path at build time (`web/src/lib/base.js`, `vite.config.js`). |
+
+Test a sub-path build locally: `MSYS_NO_PATHCONV=1 VITE_BASE_PATH=/hyrumcuts/ npm run build`, then serve `dist/` under `/hyrumcuts/` with any static server that returns `404.html` for missing files.
+
+### Alternative: Netlify
 
 1. Push this repository to GitHub and *Add new site → Import from Git* in Netlify.
 2. Build settings are read from `netlify.toml` (`npm run build`, publish `dist`, Node 22).
@@ -209,7 +235,6 @@ Hyrum uses **"Forgot your password?"** on `/admin/login`. If the email is unreac
    `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SITE_SLUG=hyrumhaircuts`, `VITE_SITE_URL=https://hyrumhaircuts.com`.
    **Do not add a secret key.**
 4. Deploy. Then add the custom domain and HTTPS.
-5. *Forms*: after the first deploy, Netlify detects the `appointment-request` form. Enable email notifications (Forms → Form notifications) so Hyrum receives requests.
 6. Deploy previews and branch deploys are automatically `noindex` (see below).
 
 What `npm run build` generates for Netlify (`scripts/netlify-headers.js`):
@@ -227,7 +252,7 @@ What `npm run build` generates for Netlify (`scripts/netlify-headers.js`):
 ## 5. Testing and verification
 
 ```bash
-npm test               # 172 unit tests (config safety, URL rules, media validation, upload cleanup on failure, gallery filter/sort, settings validation, route guard, announcement scheduling, starter-content integrity…)
+npm test               # 197 unit tests (config safety, URL rules, media validation, upload cleanup on failure, gallery filter/sort, settings validation, route guard, announcement scheduling, starter-content integrity…)
 npm run lint
 npm run db:start && npm run db:reset
 npm run db:test        # pgTAP: 39 RLS/Storage assertions inside Postgres
@@ -236,9 +261,9 @@ npm run test:e2e       # Playwright (needs the local stack + a built preview)
 npm audit
 ```
 
-**Last full run** (2026-09-19, local Supabase, Windows 11, Edge): 153 unit tests, ESLint, `npm audit` (0 vulnerabilities), 39/39 pgTAP, 64/64 `test:rls`, and 47 Playwright tests passing at desktop and phone size (1 phone-only test skipped on desktop by design).
+**Last full run** (2026-09-30, local Supabase, Windows 11, Edge): 197 unit tests, ESLint, production build (root and `/hyrumcuts/` base), `npm audit` (0 vulnerabilities), all 7 migrations applied by `db reset`, 39/39 pgTAP, 81/81 `test:rls` (including the Requests inbox and a 7 MB resumable upload), and 57 Playwright tests passing at desktop and phone size (1 phone-only test skipped on desktop by design). The `/hyrumcuts/` build was also checked by hand on a GitHub-Pages-like static server (deep admin links via 404.html, booking request into the inbox).
 
-**Since then** (2026-09-23): announcement bar, Services section, lightbox deep links, nav fixes. 172 unit tests, ESLint and the production build pass; the new migration, pgTAP, `test:rls` and Playwright have **not** been re-run yet (no Docker engine at the time). Run the full list above before launch.
+> Run `npm run test:e2e` against the **local** stack only. If your `.env` points at a hosted project, override it for that shell first: `VITE_SUPABASE_URL=http://127.0.0.1:54321` and `VITE_SUPABASE_PUBLISHABLE_KEY=<local publishable key from supabase status>` (variables already set in the environment take priority over `.env`).
 
 `verify-security.mjs` and `security.test.sql` prove: visitors read published content; visitors cannot read drafts; visitors cannot mutate content; Hyrum manages his own content; a different signed-in user cannot manage Hyrum's rows, upload, or delete his files; the audit log, owner row and cleanup queue stay private.
 
@@ -263,16 +288,17 @@ Restore into a fresh project: `psql "$DB_URL" -f backup.sql` (then the data file
 - [ ] Public sign-up **disabled** in Supabase Auth; password policy 12+ characters.
 - [ ] SMTP configured; a password-reset email was received.
 - [ ] Site URL and redirect URL set; `hyrumhaircuts.com` HTTPS live.
-- [ ] Netlify env vars set (no secret keys); a build succeeded.
+- [ ] GitHub repo variables set (no secret keys); Pages source is "GitHub Actions"; the deploy workflow succeeded.
+- [ ] Supabase Auth Site URL and reset-password redirect point at the live address.
 - [ ] Security Advisor shows no warnings; `npm run test:rls` passed on a scratch project.
 - [ ] Real Calendly link entered in **Booking Link**; the Book buttons open it.
 - [ ] Hero video + poster, profile photo, 12–24 photos, bio, contact and social links added ([`CONTENT_CHECKLIST.md`](CONTENT_CHECKLIST.md)).
 - [ ] Every starter placeholder replaced or removed: the dashboard's **"Needs your attention"** list shows what is left (photos, `[Placeholder review]` quotes, `[Owner to review…]` FAQ answers, the biography, the portrait, the hero clip). Nothing marked `[Placeholder…]` should be live at launch.
-- [ ] Netlify Forms notifications enabled and a test request received.
+- [ ] A test request sent from the live booking page shows up in **Requests**, then deleted.
 - [ ] Backups scheduled.
 - [ ] Lighthouse (mobile) run on the live URL.
 
-Controls that depend on **Supabase / Netlify project settings** (not code): disabling sign-ups, password policy, SMTP, rate limits, CAPTCHA, JWT lifetime, backups, HSTS at the CDN, and form-spam filtering. This project cannot enforce those from the repository; the launch checklist above covers them.
+Controls that depend on **Supabase / hosting settings** (not code): disabling sign-ups, password policy, SMTP, rate limits, CAPTCHA, JWT lifetime, backups, HSTS at the CDN, and form-spam filtering. This project cannot enforce those from the repository; the launch checklist above covers them.
 
 ---
 
@@ -280,7 +306,7 @@ Controls that depend on **Supabase / Netlify project settings** (not code): disa
 
 | Symptom | Likely cause and fix |
 |---|---|
-| Admin says **"Setup needed"** | `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY` missing at build time. Set them in Netlify and redeploy (Vite bakes them in at build). |
+| Admin says **"Setup needed"** | `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY` missing at build time. Set them as GitHub repo variables (or in Netlify) and redeploy: Vite bakes them in at build. |
 | Startup error mentions a *secret* / *service_role* key | A privileged key was put in a `VITE_*` variable. Remove it, use the publishable key, and rotate the leaked key. |
 | Sign-in says "email and password don't match" | Wrong credentials, or the user doesn't exist. Generic on purpose. Check the user in the Dashboard. |
 | Signed in but "This account can't manage the site" | That user isn't the registered owner. Run `bootstrap-owner`/`bootstrap_owner.sql` for the right email. |
@@ -290,7 +316,10 @@ Controls that depend on **Supabase / Netlify project settings** (not code): disa
 | Video upload fails / stalls | Free plan max object is 50 MiB; CMS hero limit is 50 MB. Files over 6 MB use resumable (TUS) uploads: check `connect-src` in the CSP includes `https://<ref>.storage.supabase.co`, and press **Save** again to resume after an interruption. |
 | Images/videos blocked, console shows CSP errors | `VITE_SUPABASE_URL` at build time doesn't match the real project URL (the CSP is generated from it). Fix the variable and redeploy. |
 | CORS errors | Wrong project URL, or calling a non-Supabase host. The API sends CORS headers for any origin; recheck the URL. |
-| `/admin/...` shows Netlify "Page not found" on refresh | `netlify.toml` not deployed, or the `/admin/*` rewrite was removed. |
+| `/admin/...` shows "Page not found" on refresh | GitHub Pages: `404.html` must load `spa-redirect.js` first (it does in `web/404.html`). Netlify: `netlify.toml` not deployed, or the `/admin/*` rewrite was removed. |
+| Live site has broken links or missing images, pointing at `/booking/` instead of `/hyrumcuts/booking/` | Built with the wrong `VITE_BASE_PATH`. It must match the repository name for a project site (`/hyrumcuts/`), or `/` on a custom domain. |
+| The booking form says requests "aren't switched on yet" | No owner registered in this Supabase project, or the site was built without Supabase variables. |
+| Booking form says "a lot of requests are coming in" | The site-wide flood limit (20 requests per 10 minutes) was hit, usually by a bot. It clears itself. |
 | Public site shows only the default brand copy (none of Hyrum's edits) right after a deploy | The frontend expects a column the database doesn't have yet. Apply the pending migrations (`npx supabase db push`). |
 | Public site shows the gallery error message | Supabase unreachable / paused (free projects pause after inactivity). Restore the project. The page still shows brand copy and Book buttons. |
 | Reset email never arrives | SMTP not configured (built-in mailer is rate-limited) or the redirect URL isn't allow-listed. |

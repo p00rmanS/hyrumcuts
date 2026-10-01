@@ -64,7 +64,7 @@ If one photo fails (bad connection, wrong file type) the others are still saved.
 | **Archive** | Hidden, but kept safely so you can **Restore** it later. |
 | **Delete** | Erases it for good. You're asked to confirm first, and it can't be undone. |
 
-Go to **Work → Manage Work** to see everything. There you can filter by category or status, **Preview** how a piece looks, **Feature** your best work (★), and change the order.
+Go to **Work → Manage Work** to see everything. There you can **search** by title, haircut or category, filter by category or status, **Preview** how a piece looks, **Feature** your best work (★), and change the order. Your search and filters stay put if you refresh the page, and the numbers on the **Dashboard** (Published, Drafts) open this list already filtered.
 
 ### Changing the order
 
@@ -100,6 +100,14 @@ When you (or a client) open a photo in the gallery, the web address changes to p
 - **Website Content → FAQ**: questions people ask. Turn each one on or off, drag to reorder.
 - **Website Content → Announcement**: a short notice across the top of every page, for example *"Away Oct 3–10. Booking reopens Oct 11."* You can add a link (like your booking page) and pick **Show from** / **Show until** dates, so it appears and disappears by itself. Dates follow your time zone (Settings → SEO). Clear the message to turn it off. Visitors can close it with the **×**.
 
+## Appointment requests
+
+When someone fills in the request form on your booking page, it lands in **Requests** (in the menu, and in the bottom bar on your phone). The **Dashboard** tells you when new ones arrive.
+
+Each request shows the name, the day and time they'd like, the service, and any notes, with **Call**, **Text** and **Email** buttons that open your phone's apps. Then move it along with one tap: **Mark contacted**, **Mark booked**, or **Close** when you're done. Use the **Show** menu to see closed ones again.
+
+Requests contain your clients' personal details and only you can see them. **Delete** a request when a client asks you to, or once you no longer need it.
+
 ## Reviews
 
 **Reviews → + Add review.** Only add **real** reviews from clients who said you may share them. Use just a first name or initial. New reviews you add stay **hidden until you turn on "Approved and shown"**. Never write or change a review to say something the client didn't say.
@@ -119,6 +127,13 @@ Every field tells you what's expected. If something isn't allowed (for example a
 ## "Unsaved changes"
 
 Edit pages show **All changes saved**, **Unsaved changes** or **Saved ✓**. If you try to leave with unsaved changes you'll be asked first, so you can't lose work by accident.
+
+On a computer you can press **Ctrl+S** (**⌘+S** on a Mac) to save, just like in other programs. Most settings pages also have a **See it on your website ↗** button that opens the part of your site you're editing in a new tab.
+
+## Handy extras
+
+- **Announcement status:** *Website Content → Announcement* tells you in plain words whether your notice is **showing now**, **scheduled** to start, or has **ended**, and it updates as you change the dates. The Dashboard shows the same status whenever an announcement is set.
+- **Google preview:** *Settings → SEO* shows roughly how your site will look in Google search results as you type, and warns you if the title or description is long enough to be cut off.
 
 ## If something goes wrong
 

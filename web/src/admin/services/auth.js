@@ -1,5 +1,6 @@
 import { getAdminClient } from '../../lib/supabase-admin-client.js';
 import { AppError, friendlyError } from './errors.js';
+import { toUrl } from '../../lib/base.js';
 
 /**
  * Sign-in, sign-out and "who am I" for the admin.
@@ -76,7 +77,7 @@ export async function checkOwner({ force = false } = {}) {
 
 /** Always succeeds from the caller's point of view: never reveal whether an email has an account. */
 export async function sendPasswordReset(email) {
-  const redirectTo = `${window.location.origin}/admin/reset-password`;
+  const redirectTo = `${window.location.origin}${toUrl('/admin/reset-password')}`;
   const { error } = await getAdminClient().auth.resetPasswordForEmail(email.trim(), { redirectTo });
   if (error && (Number(error.status) === 429 || /rate limit/i.test(error.message))) {
     throw new AppError('Too many requests. Please wait a few minutes before asking for another link.', { code: '429', retryable: true });

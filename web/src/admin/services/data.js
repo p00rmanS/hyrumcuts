@@ -90,7 +90,7 @@ export const itemsApi = {
   },
   async get(id) {
     const row = unwrap(await db().from('gallery_items').select(ITEM_SELECT).eq('id', id).maybeSingle(), 'Could not load that item.');
-    if (!row) throw new Error('That portfolio item no longer exists.');
+    if (!row) throw Object.assign(new Error('That portfolio item no longer exists. It may have been deleted.'), { notFound: { href: '/admin/portfolio', label: 'Back to Manage Work' } });
     return row;
   },
   async create(values) {
@@ -135,14 +135,15 @@ async function count(table, apply) {
 }
 
 export async function getDashboardCounts() {
-  const [published, drafts, archived, reviews, faqs] = await Promise.all([
+  const [published, drafts, archived, reviews, faqs, newRequests] = await Promise.all([
     count('gallery_items', (q) => q.eq('is_published', true).is('archived_at', null)),
     count('gallery_items', (q) => q.eq('is_published', false).is('archived_at', null)),
     count('gallery_items', (q) => q.not('archived_at', 'is', null)),
     count('reviews', (q) => q.eq('is_published', true).is('archived_at', null)),
     count('faqs', (q) => q.eq('is_published', true).is('archived_at', null)),
+    count('appointment_requests', (q) => q.eq('status', 'new')),
   ]);
-  return { published, drafts, archived, reviews, faqs };
+  return { published, drafts, archived, reviews, faqs, newRequests };
 }
 
 export async function getRecentActivity(limit = 8) {
@@ -180,3 +181,25 @@ export async function getPlaceholderSummary(settings) {
   for (const m of media.data ?? []) byItem.set(m.item_id, { media: [{ storage_path: m.storage_path }] });
   return summarizePlaceholders({ items: [...byItem.values()], reviews: reviews.data ?? [], faqs: faqs.data ?? [], settings });
 }
+
+// ---------------------------------------------------------------------------
+// Appointment requests (the booking-form inbox). Personal data: owner-only by RLS.
+// ---------------------------------------------------------------------------
+
+const REQUEST_SELECT = 'id,full_name,phone,email,service,client_type,preferred_date,preferred_time_slot,notes,status,created_at';
+
+export const requestsApi = {
+  /** @param {{ status?: 'open'|'all'|'new'|'contacted'|'booked'|'closed' }} [filter] open = everything not closed */
+  async list({ status = 'open' } = {}) {
+    let q = db().from('appointment_requests').select(REQUEST_SELECT).order('created_at', { ascending: false }).limit(200);
+    if (status === 'open') q = q.neq('status', 'closed');
+    else if (status !== 'all') q = q.eq('status', status);
+    return unwrap(await q, 'Could not load your requests.');
+  },
+  async setStatus(id, status) {
+    return unwrap(await db().from('appointment_requests').update({ status }).eq('id', id).select(REQUEST_SELECT).single(), 'Could not update that request.');
+  },
+  async remove(id) {
+    unwrap(await db().from('appointment_requests').delete().eq('id', id), 'Could not delete that request.');
+  },
+};

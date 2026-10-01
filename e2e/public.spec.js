@@ -74,6 +74,36 @@ test.describe('public site', () => {
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   });
 
+  test('services section shows the published services, and subpages link to it', async ({ page, isMobile }) => {
+    await page.goto('/');
+    const services = page.locator('[data-services]');
+    await expect(services).toBeVisible();
+    await expect(services.locator('[data-services-list] li').first()).toBeVisible();
+    await expect(services).not.toContainText(/\$\d/); // never a price
+
+    // On another page, the nav still links to the home page's sections.
+    await page.goto('/booking/');
+    if (isMobile) await page.locator('[data-mobile-menu-toggle]').click();
+    const nav = page.getByRole('navigation', { name: isMobile ? 'Mobile' : 'Primary' });
+    await expect(nav.getByRole('link', { name: 'Services' })).toBeVisible();
+    await nav.getByRole('link', { name: 'Services' }).click();
+    await expect(page).toHaveURL(/\/#services$/);
+    await expect(page.locator('#services')).toBeInViewport();
+  });
+
+  test('a shared #work/<id> link opens that cut in the viewer', async ({ page }) => {
+    await page.goto('/');
+    const card = page.locator('[data-gallery-item]').filter({ hasText: 'E2E Published Cut' }).first();
+    const id = await card.getAttribute('data-id');
+    await page.goto(`/#work/${id}`);
+    const box = page.locator('[data-lightbox]');
+    await expect(box).toBeVisible();
+    await expect(page.locator('[data-lightbox-caption]')).toHaveText('E2E Published Cut');
+    await page.keyboard.press('Escape');
+    await expect(box).toBeHidden();
+    await expect(page).toHaveURL(/#work$/);
+  });
+
   test('admin pages are marked noindex', async ({ page }) => {
     await page.goto('/admin/login');
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);

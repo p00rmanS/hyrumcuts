@@ -1,13 +1,16 @@
 import { h, setVisible } from '../lib/dom.js';
 import { bookingAction } from '../lib/urls.js';
+import { getPublicClient } from '../lib/supabase-client.js';
+import { buildRequestRow, isBot, requestErrorMessage } from '../lib/requests.js';
 import { applyBookingCtas } from './calendly.js';
 import { applySeo } from './seo.js';
 import { initChrome, loadSite } from './site.js';
+import { toUrl } from '../lib/base.js';
 
 initChrome();
 
 const { content, settings } = await loadSite();
-applySeo(settings, { title: `Request an appointment — ${settings.brand_name}`, path: '/booking/' });
+applySeo(settings, { title: `Request an appointment — ${settings.brand_name}`, path: toUrl('/booking/') });
 
 // Live calendar option only when a booking link is configured.
 const action = bookingAction(settings);
@@ -20,7 +23,7 @@ if (live) applyBookingCtas(settings, live);
 const serviceSelect = document.querySelector('[data-service-select]');
 if (serviceSelect) {
   for (const s of content.services) {
-    // Submit the readable name: Netlify Forms has no database to map an id back.
+    // Submit the readable name, so the request still makes sense if a service is later renamed or removed.
     if (s.name?.trim()) serviceSelect.appendChild(h('option', { value: s.name.trim() }, s.name.trim()));
   }
 }
@@ -68,11 +71,12 @@ function initFormValidation() {
   form.addEventListener('submit', (event) => {
     const invalid = [...form.elements].filter((el) => el.willValidate && !el.validity.valid);
     for (const el of form.elements) el.removeAttribute?.('aria-invalid');
+    event.preventDefault();
     if (invalid.length === 0) {
       setVisible(summary, false);
-      return; // Netlify Forms takes it from here.
+      sendRequest(form, summary);
+      return;
     }
-    event.preventDefault();
     for (const el of invalid) el.setAttribute('aria-invalid', 'true');
     summary.replaceChildren(
       h('p', { class: 'font-semibold mb-1' }, 'Please fix the following:'),
@@ -90,4 +94,51 @@ function initFormValidation() {
   form.addEventListener('input', (event) => {
     if (event.target instanceof HTMLElement && event.target.validity?.valid) event.target.removeAttribute('aria-invalid');
   });
+}
+
+/**
+ * Send a valid request to the owner's private inbox. Visitors can insert but
+ * never read requests back (see the appointment_requests migration). On any
+ * problem the form keeps everything the visitor typed.
+ */
+async function sendRequest(form, summary) {
+  const button = form.querySelector('[data-submit]');
+  const values = Object.fromEntries(new FormData(form));
+  values.consent = form.querySelector('#consent')?.checked === true;
+  const thanks = toUrl('/booking/thanks/');
+
+  if (isBot(values)) {
+    location.assign(thanks);
+    return;
+  }
+  const showError = (text) => {
+    summary.replaceChildren(h('p', {}, text));
+    setVisible(summary, true);
+    summary.focus();
+  };
+  const client = getPublicClient();
+  if (!client) {
+    showError(requestErrorMessage({ message: 'not set up to take requests' }));
+    return;
+  }
+
+  const label = button?.textContent;
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Sending…';
+  }
+  try {
+    const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(15_000) : undefined;
+    let query = client.from('appointment_requests').insert(buildRequestRow(values));
+    if (signal) query = query.abortSignal(signal);
+    const { error } = await query;
+    if (error) throw error;
+    location.assign(thanks);
+  } catch (error) {
+    showError(requestErrorMessage(error));
+    if (button) {
+      button.disabled = false;
+      button.textContent = label;
+    }
+  }
 }

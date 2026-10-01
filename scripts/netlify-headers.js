@@ -54,6 +54,19 @@ export function buildCsp(supabaseUrl) {
 }
 
 /**
+ * The same policy for a <meta http-equiv> tag (static hosts such as GitHub
+ * Pages cannot send headers). Browsers ignore frame-ancestors in a meta tag,
+ * so it is left out here; the admin protects itself against framing in JS.
+ * @param {string | undefined} supabaseUrl
+ */
+export function buildMetaCsp(supabaseUrl) {
+  return buildCsp(supabaseUrl)
+    .split('; ')
+    .filter((d) => !d.startsWith('frame-ancestors'))
+    .join('; ');
+}
+
+/**
  * @param {string | undefined} supabaseUrl
  * @param {{ indexable?: boolean }} [options] indexable=false for deploy previews and branch deploys
  */

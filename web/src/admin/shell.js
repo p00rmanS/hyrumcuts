@@ -1,6 +1,7 @@
 import { h, mount } from '../lib/dom.js';
 import { signOut } from './services/auth.js';
 import { confirmDialog, toast } from './ui.js';
+import { toUrl } from '../lib/base.js';
 
 /**
  * The signed-in frame: sidebar on large screens, a top bar + bottom tab bar +
@@ -9,6 +10,7 @@ import { confirmDialog, toast } from './ui.js';
 
 export const NAV = [
   { label: 'Dashboard', href: '/admin', key: 'dashboard' },
+  { label: 'Requests', href: '/admin/requests', key: 'requests' },
   {
     group: 'Portfolio',
     items: [
@@ -55,6 +57,7 @@ const ICONS = {
   work: 'M4 5h16v14H4zM4 15l4-4 4 4 3-3 5 5',
   plus: 'M12 5v14M5 12h14',
   video: 'M4 6h11v12H4zM15 10l5-3v10l-5-3',
+  inbox: 'M3 13l3-8h12l3 8v6H3zM3 13h5l1 3h6l1-3h5',
   more: 'M4 6h16M4 12h16M4 18h16',
 };
 
@@ -98,7 +101,7 @@ async function handleSignOut() {
     toast(error.message, { type: 'error' });
     return;
   }
-  location.assign('/admin/login');
+  location.assign(toUrl('/admin/login'));
 }
 
 /**
@@ -172,7 +175,7 @@ export function renderShell(root, { user, activeKey }) {
     tab('Home', '/admin', 'dashboard', ICONS.home),
     tab('Work', '/admin/portfolio', 'portfolio', ICONS.work),
     tab('Add', '/admin/portfolio/add', 'portfolio-add', ICONS.plus),
-    tab('Hero', '/admin/media/hero', 'hero-media', ICONS.video),
+    tab('Requests', '/admin/requests', 'requests', ICONS.inbox),
     moreBtn,
   );
 

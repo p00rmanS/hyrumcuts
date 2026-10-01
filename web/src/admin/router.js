@@ -1,15 +1,19 @@
 /**
  * Minimal History-API router for /admin/*.
  *
- * Direct visits and refreshes of any admin URL work because Netlify rewrites
- * /admin/* to the admin shell (netlify.toml) and Vite does the same in dev.
+ * Direct visits and refreshes of any admin URL work on every host: Netlify
+ * rewrites /admin/* to the admin shell (netlify.toml), Vite does the same in
+ * dev, and on GitHub Pages 404.html hands the address over (spa-redirect.js).
  */
+
+import { toAppPath, toUrl } from '../lib/base.js';
 
 /** @type {Array<{ path: string, key: string, title: string, public?: boolean, load: () => Promise<any> }>} */
 export const ROUTES = [
   { path: '/admin', key: 'dashboard', title: 'Dashboard', load: () => import('./pages/dashboard.js') },
   { path: '/admin/login', key: 'login', title: 'Sign in', public: true, load: () => import('./pages/login.js') },
   { path: '/admin/reset-password', key: 'reset', title: 'Set a new password', public: true, load: () => import('./pages/reset-password.js') },
+  { path: '/admin/requests', key: 'requests', title: 'Requests', load: () => import('./pages/requests.js') },
   { path: '/admin/portfolio', key: 'portfolio', title: 'Manage work', load: () => import('./pages/portfolio-list.js') },
   { path: '/admin/portfolio/add', key: 'portfolio-add', title: 'Add work', load: () => import('./pages/portfolio-add.js') },
   { path: '/admin/portfolio/categories', key: 'categories', title: 'Categories', load: () => import('./pages/categories.js') },
@@ -96,8 +100,8 @@ async function confirmLeave() {
 export async function navigate(path, { replace = false, force = false } = {}) {
   if (!force && !(await confirmLeave())) return false;
   dirtyGuard = null;
-  if (replace) history.replaceState({}, '', path);
-  else history.pushState({}, '', path);
+  if (replace) history.replaceState({}, '', toUrl(path));
+  else history.pushState({}, '', toUrl(path));
   await onRoute?.();
   return true;
 }
@@ -111,15 +115,16 @@ export function startRouter(handler) {
     const a = event.target instanceof Element ? event.target.closest('a[href]') : null;
     if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
     const url = new URL(a.href, location.href);
-    if (url.origin !== location.origin || !url.pathname.startsWith('/admin')) return;
+    const appPath = toAppPath(url.pathname);
+    if (url.origin !== location.origin || !(appPath === '/admin' || appPath.startsWith('/admin/'))) return;
     event.preventDefault();
-    navigate(url.pathname + url.search);
+    navigate(appPath + url.search);
   });
 
   window.addEventListener('popstate', async () => {
     if (dirtyGuard?.() && !(await confirmLeave())) {
       // Undo the browser's back/forward by re-pushing the page we were on.
-      history.pushState({}, '', currentUrl);
+      history.pushState({}, '', toUrl(currentUrl));
       return;
     }
     dirtyGuard = null;
@@ -135,5 +140,5 @@ export function startRouter(handler) {
 
 let currentUrl = '/admin';
 export function rememberCurrentUrl() {
-  currentUrl = location.pathname + location.search;
+  currentUrl = toAppPath(location.pathname) + location.search;
 }

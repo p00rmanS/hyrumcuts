@@ -351,6 +351,25 @@ export { h, mount };
  * Unsaved-changes tracking for a form. Returns { isDirty, markClean, dispose }.
  * Registers a guard so navigating away (or closing the tab) asks first.
  */
+/**
+ * Ctrl/⌘+S submits `form` (instead of the browser's "Save page as").
+ * Returns a small hint element and a dispose function for page cleanup.
+ */
+export function saveShortcut(form, saveButton) {
+  const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+  const onKey = (event) => {
+    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 's') {
+      event.preventDefault();
+      if (!saveButton.disabled && document.contains(form)) form.requestSubmit(saveButton);
+    }
+  };
+  document.addEventListener('keydown', onKey);
+  return {
+    hint: h('p', { class: 'hidden lg:block text-xs text-muted' }, `Tip: press ${isMac ? '⌘' : 'Ctrl'}+S to save.`),
+    dispose: () => document.removeEventListener('keydown', onKey),
+  };
+}
+
 export function trackDirty(root, { setGuard }) {
   let dirty = false;
   const mark = () => {

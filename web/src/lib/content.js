@@ -1,3 +1,4 @@
+import { toUrl } from './base.js';
 import { getPublicClient } from './supabase-client.js';
 import { publicMediaUrl } from './media-url.js';
 import { safeHttpUrl } from './urls.js';
@@ -54,8 +55,8 @@ export const SETTINGS_FALLBACK = Object.freeze({
 
 /** Bundled fallbacks for the hero, used until the owner uploads their own. */
 export const HERO_FALLBACK = Object.freeze({
-  video: '/assets/video/hyrum1.mp4',
-  poster: '/assets/images/placeholders/hero-poster.jpg',
+  video: toUrl('/assets/video/hyrum1.mp4'),
+  poster: toUrl('/assets/images/placeholders/hero-poster.jpg'),
 });
 
 const SETTINGS_COLUMNS = Object.keys(SETTINGS_FALLBACK).join(',');
@@ -188,6 +189,27 @@ export function activeAnnouncement(settings, now = new Date()) {
   const href = safeHttpUrl(settings.announcement_link_url, { httpsOnly: true });
   const label = settings.announcement_link_label?.trim();
   return { text, link: href && label ? { href, label } : null };
+}
+
+/**
+ * Where the announcement stands, in words the owner understands.
+ * @returns {{ state: 'off'|'live'|'scheduled'|'ended', message: string }}
+ */
+export function announcementStatus(settings, now = new Date()) {
+  if (!settings.announcement_text?.trim()) return { state: 'off', message: 'Off. Nothing is showing on your website.' };
+  const today = todayIn(settings.timezone, now);
+  const from = settings.announcement_starts_on;
+  const until = settings.announcement_ends_on;
+  if (from && today < from) return { state: 'scheduled', message: `Scheduled. It starts showing on ${formatDay(from)}${until ? ` and stops after ${formatDay(until)}` : ''}.` };
+  if (until && today > until) return { state: 'ended', message: `Ended. It stopped showing after ${formatDay(until)}. Clear the message or pick new dates.` };
+  return { state: 'live', message: `Showing now on every page${until ? `, until the end of ${formatDay(until)}` : ', until you turn it off'}.` };
+}
+
+/** "2026-10-03" -> "Sat, Oct 3" (the calendar date itself, never shifted by time zone). */
+export function formatDay(isoDate) {
+  const d = new Date(`${isoDate}T12:00:00Z`);
+  if (Number.isNaN(d.getTime())) return isoDate;
+  return new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }).format(d);
 }
 
 /** Hero media URLs, with bundled fallbacks. */

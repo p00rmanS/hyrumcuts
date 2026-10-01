@@ -6,6 +6,7 @@ import { checkOwner, clearAuthCache, onAuthEvent, signOut } from './services/aut
 import { runCleanupQueue } from './services/storage.js';
 import { renderShell } from './shell.js';
 import { errorPanel, loading } from './ui.js';
+import { SPA_REDIRECT_KEY, toAppPath, toUrl } from '../lib/base.js';
 
 /**
  * Admin entry point. Every navigation:
@@ -22,6 +23,26 @@ const app = document.getElementById('app');
 let renderToken = 0;
 let cleanup = null;
 let cleaned = false;
+
+// Never run the admin inside someone else's frame (clickjacking). Hosts that
+// can send headers also set X-Frame-Options; GitHub Pages cannot, so check here.
+const framed = (() => {
+  try {
+    return window.top !== window.self;
+  } catch {
+    return true;
+  }
+})();
+
+// A direct visit or refresh of /admin/... on GitHub Pages arrives via 404.html,
+// which saved the address (see public-site/spa-redirect.js). Put it back.
+try {
+  const saved = sessionStorage.getItem(SPA_REDIRECT_KEY);
+  sessionStorage.removeItem(SPA_REDIRECT_KEY);
+  if (saved && (saved === '/admin' || saved.startsWith('/admin/') || saved.startsWith('/admin?'))) history.replaceState(null, '', toUrl(saved));
+} catch {
+  // Storage blocked: stay on the dashboard.
+}
 
 function setupMissing() {
   mount(
@@ -50,7 +71,7 @@ function notOwner(user) {
           class: 'a-btn-primary',
           onClick: async () => {
             await signOut();
-            location.assign('/admin/login');
+            location.assign(toUrl('/admin/login'));
           },
         },
         'Sign out and try a different account',
@@ -67,12 +88,13 @@ async function render() {
 
   if (!config.isConfigured) return setupMissing();
 
-  const match = matchRoute(location.pathname);
+  const match = matchRoute(toAppPath(location.pathname));
   const query = new URLSearchParams(location.search);
 
   if (!match) {
     const auth = await checkOwner().catch(() => ({ user: null }));
     if (!auth.user || auth.reason) return navigate('/admin/login', { replace: true, force: true });
+    document.title = 'Page not found · HyrumHaircuts Admin';
     const main = renderShell(app, { user: auth.user, activeKey: '' });
     mount(main, h('div', { class: 'a-page' }, h('h1', { class: 'a-h1' }, 'Page not found'), h('a', { href: '/admin', class: 'a-btn-primary mt-4' }, 'Back to dashboard')));
     return undefined;
@@ -94,7 +116,7 @@ async function render() {
     const auth = await checkOwner();
     if (token !== renderToken) return undefined;
     if (auth.reason === 'signed-out') {
-      const next = encodeURIComponent(location.pathname + location.search);
+      const next = encodeURIComponent(toAppPath(location.pathname) + location.search);
       return navigate(`/admin/login?next=${next}`, { replace: true, force: true });
     }
     if (auth.reason === 'not-owner') return notOwner(auth.user);
@@ -122,7 +144,10 @@ async function render() {
     }
   } catch (error) {
     if (token !== renderToken) return undefined;
-    const panel = errorPanel(error, () => render());
+    // "Try again" can't help when the thing is gone; offer the way back instead.
+    const panel = error?.notFound
+      ? h('div', { class: 'a-alert-info', role: 'alert' }, h('p', { class: 'mb-3' }, error.message), h('a', { href: error.notFound.href, class: 'a-btn-primary' }, error.notFound.label))
+      : errorPanel(error, () => render());
     const shellMain = app.querySelector('#main-content');
     if (shellMain) mount(shellMain, h('div', { class: 'a-page' }, panel));
     else mount(app, h('div', { class: 'a-page max-w-xl' }, panel));
@@ -136,10 +161,15 @@ if (config.isConfigured) {
   onAuthEvent((event) => {
     if (event === 'SIGNED_OUT') {
       clearAuthCache();
-      if (!location.pathname.startsWith('/admin/login') && !location.pathname.startsWith('/admin/reset-password')) location.assign('/admin/login');
+      const here = toAppPath(location.pathname);
+      if (!here.startsWith('/admin/login') && !here.startsWith('/admin/reset-password')) location.assign(toUrl('/admin/login'));
     }
-    if (event === 'PASSWORD_RECOVERY' && !location.pathname.startsWith('/admin/reset-password')) navigate('/admin/reset-password', { force: true });
+    if (event === 'PASSWORD_RECOVERY' && !toAppPath(location.pathname).startsWith('/admin/reset-password')) navigate('/admin/reset-password', { force: true });
   });
 }
 
-render();
+if (framed) {
+  mount(app, h('p', { class: 'a-page' }, 'For your security, the site manager cannot be shown inside another website. ', h('a', { href: '/admin', target: '_top', class: 'underline' }, 'Open it directly'), '.'));
+} else {
+  render();
+}

@@ -8,7 +8,7 @@ import { captureVideoFrame, inspectImageFile, processGalleryImage, processSingle
 import { categoriesApi, itemsApi, mediaApi } from '../services/data.js';
 import { removeObjects, uploadObject } from '../services/storage.js';
 import { replaceMedia } from '../services/uploads.js';
-import { confirmDialog, pageHeader, statusBadge, toast, trackDirty, withBusy } from '../ui.js';
+import { confirmDialog, pageHeader, saveShortcut, statusBadge, toast, trackDirty, withBusy } from '../ui.js';
 import { deleteItemFlow, previewItem } from './portfolio-common.js';
 
 /** Edit one portfolio item: text, category, publish state, and its media. */
@@ -22,7 +22,8 @@ export default async function portfolioEdit({ params, ownerId, setGuard, navigat
   const save = h('button', { type: 'submit', class: 'a-btn-primary' }, 'Save changes');
   const form = h('form', { class: 'a-card max-w-2xl mb-6', novalidate: true }, errorBox, fields.el);
   const dirty = trackDirty(form, { setGuard });
-  form.append(h('div', { class: 'flex flex-wrap items-center gap-4' }, save, dirty.indicator));
+  const shortcut = saveShortcut(form, save);
+  form.append(h('div', { class: 'flex flex-wrap items-center gap-4' }, save, dirty.indicator, shortcut.hint));
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -235,5 +236,11 @@ export default async function portfolioEdit({ params, ownerId, setGuard, navigat
     h('section', { class: 'a-card max-w-2xl mb-6' }, h('h2', { class: 'text-xl mb-3' }, 'Photos & video'), mediaHost),
     actions,
   );
-  return { node, cleanup: () => dirty.dispose() };
+  return {
+    node,
+    cleanup: () => {
+      dirty.dispose();
+      shortcut.dispose();
+    },
+  };
 }

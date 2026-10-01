@@ -1,3 +1,4 @@
+import { announcementStatus } from '../../lib/content.js';
 import { h } from '../../lib/dom.js';
 import { getDashboardCounts, getPlaceholderSummary, getRecentActivity, getSettings } from '../services/data.js';
 import { pageHeader, timeAgo } from '../ui.js';
@@ -8,6 +9,7 @@ export default async function dashboard() {
   const [settings, counts, activity] = await Promise.all([getSettings(), getDashboardCounts(), getRecentActivity(8).catch(() => [])]);
   const placeholders = await getPlaceholderSummary(settings).catch(() => undefined);
   const warnings = computeWarnings(settings, counts, placeholders);
+  const announcement = announcementStatus(settings);
   const stat = (label, value, href) =>
     h('a', { href, class: 'a-card block hover:border-ink transition-colors' }, h('p', { class: 'text-3xl font-display' }, value ?? '–'), h('p', { class: 'text-sm text-muted' }, label));
 
@@ -35,9 +37,23 @@ export default async function dashboard() {
       'section',
       { class: 'mb-8', 'aria-labelledby': 'stats-h' },
       h('h2', { id: 'stats-h', class: 'text-xl mb-3' }, 'Your portfolio'),
-      h('div', { class: 'grid grid-cols-2 lg:grid-cols-4 gap-3' }, stat('Published', counts.published, '/admin/portfolio'), stat('Drafts', counts.drafts, '/admin/portfolio'), stat('Reviews shown', counts.reviews, '/admin/reviews'), stat('FAQs shown', counts.faqs, '/admin/content/faq')),
+      h('div', { class: 'grid grid-cols-2 lg:grid-cols-4 gap-3' }, stat('Published', counts.published, '/admin/portfolio?status=published'), stat('Drafts', counts.drafts, '/admin/portfolio?status=draft'), stat('Reviews shown', counts.reviews, '/admin/reviews'), stat('FAQs shown', counts.faqs, '/admin/content/faq')),
       counts.archived ? h('p', { class: 'text-sm text-muted mt-2' }, `${counts.archived} archived item${counts.archived === 1 ? '' : 's'} (hidden, can be restored).`) : null,
     ),
+
+    announcement.state === 'off'
+      ? null
+      : h(
+          'section',
+          { class: 'mb-8', 'aria-labelledby': 'announce-h' },
+          h('h2', { id: 'announce-h', class: 'text-xl mb-3' }, 'Announcement'),
+          h(
+            'div',
+            { class: `${announcement.state === 'live' ? 'a-alert-ok' : announcement.state === 'ended' ? 'a-alert-warn' : 'a-alert-info'} flex flex-wrap items-center justify-between gap-3` },
+            h('span', { class: 'flex-1 min-w-[12rem]' }, h('span', { class: 'font-semibold' }, `“${settings.announcement_text.trim()}”`), h('br'), announcement.message),
+            h('a', { href: '/admin/content/announcement', class: 'a-btn-secondary a-btn-sm' }, 'Edit'),
+          ),
+        ),
 
     h(
       'section',

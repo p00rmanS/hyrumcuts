@@ -1,6 +1,7 @@
 import { h } from '../../lib/dom.js';
 import { passwordProblems, signOut, updatePassword, verifyCurrentPassword } from '../services/auth.js';
 import { confirmDialog, pageHeader, toast, uid, withBusy } from '../ui.js';
+import { toUrl } from '../../lib/base.js';
 
 /** Change password and sign out. */
 export default async function account({ user }) {
@@ -57,7 +58,7 @@ export default async function account({ user }) {
         if (!ok) return;
         try {
           await signOut({ everywhere: true });
-          location.assign('/admin/login');
+          location.assign(toUrl('/admin/login'));
         } catch (error) {
           toast(error.message, { type: 'error' });
         }
@@ -71,6 +72,6 @@ export default async function account({ user }) {
     { class: 'a-page' },
     pageHeader('Password & security', `Signed in as ${user.email ?? 'the site owner'}.`),
     form,
-    h('div', { class: 'a-card max-w-lg' }, h('h2', { class: 'text-xl mb-1' }, 'Sign out'), h('p', { class: 'text-muted text-sm mb-4' }, 'Signing out on a shared or borrowed device keeps your site safe.'), h('div', { class: 'flex flex-wrap gap-2' }, h('button', { type: 'button', class: 'a-btn-primary', onClick: async () => { await signOut(); location.assign('/admin/login'); } }, 'Sign out'), signOutEverywhere)),
+    h('div', { class: 'a-card max-w-lg' }, h('h2', { class: 'text-xl mb-1' }, 'Sign out'), h('p', { class: 'text-muted text-sm mb-4' }, 'Signing out on a shared or borrowed device keeps your site safe.'), h('div', { class: 'flex flex-wrap gap-2' }, h('button', { type: 'button', class: 'a-btn-primary', onClick: async () => { await signOut(); location.assign(toUrl('/admin/login')); } }, 'Sign out'), signOutEverywhere)),
   );
 }

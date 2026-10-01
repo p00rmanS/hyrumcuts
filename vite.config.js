@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import tailwindcss from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
-import { buildHeaders, buildRobots, buildSitemap } from './scripts/netlify-headers.js';
+import { buildHeaders, buildMetaCsp, buildRobots, buildSitemap } from './scripts/netlify-headers.js';
+import { normalizeBase, toUrl } from './web/src/lib/base.js';
 
 const repoRoot = import.meta.dirname;
 const webRoot = resolve(repoRoot, 'web');
@@ -34,11 +35,12 @@ function htmlPartials() {
  * server must hand every extension-less admin URL to the admin shell, exactly
  * like the Netlify rewrite in netlify.toml does in production.
  */
-function adminSpaFallback() {
+function adminSpaFallback(base) {
+  const adminRoot = `${base}admin`;
   const rewrite = (req, _res, next) => {
     const url = (req.url ?? '').split('?')[0];
-    if (url.startsWith('/admin') && !url.includes('.') && url !== '/admin/index.html') {
-      req.url = '/admin/index.html';
+    if (url.startsWith(adminRoot) && !url.includes('.') && url !== `${adminRoot}/index.html`) {
+      req.url = `${adminRoot}/index.html`;
     }
     next();
   };
@@ -73,14 +75,55 @@ function netlifyFiles(env) {
   };
 }
 
+/**
+ * Static hosts without header support (GitHub Pages) need everything in the
+ * HTML itself:
+ *  - root-relative links ("/booking/", "/#work") get the base path, so the
+ *    site works under a sub-path such as /hyrumcuts/;
+ *  - the Content-Security-Policy and referrer policy become <meta> tags.
+ * Build only: the dev server injects inline scripts a CSP would block.
+ */
+function staticHostHtml(env, base) {
+  const csp = buildMetaCsp(env.VITE_SUPABASE_URL);
+  return {
+    name: 'hyrumhaircuts:static-host-html',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html) {
+        // Canonical / og:url / og:image must name the real public address (crawlers don't run JS).
+        const siteUrl = (env.VITE_SITE_URL || 'https://hyrumhaircuts.com').replace(/\/+$/, '');
+        html = html.replaceAll('https://hyrumhaircuts.com/', `${siteUrl}/`);
+        const linked = html.replace(/\b(href|src|action|poster)="(\/(?!\/)[^"]*)"/g, (_m, attr, path) => `${attr}="${toUrl(path, base)}"`);
+        const meta = [
+          `<meta http-equiv="Content-Security-Policy" content="${csp}">`,
+          '<meta name="referrer" content="strict-origin-when-cross-origin">',
+        ].join('\n  ');
+        return linked.replace(/<meta charset="UTF-8">/i, (m) => `${m}\n  ${meta}`);
+      },
+    },
+    generateBundle() {
+      // Tell GitHub Pages to serve the files as they are (no Jekyll processing).
+      this.emitFile({ type: 'asset', fileName: '.nojekyll', source: '' });
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, repoRoot, 'VITE_');
+  // "/" for a domain root, "/hyrumcuts/" for https://<user>.github.io/hyrumcuts/.
+  // Git Bash on Windows rewrites "/hyrumcuts/" into "C:/Program Files/Git/hyrumcuts/"; refuse that loudly.
+  if (/^[a-z]:|program files/i.test(env.VITE_BASE_PATH ?? '')) {
+    throw new Error(`VITE_BASE_PATH looks like a Windows path (${env.VITE_BASE_PATH}). In Git Bash run: MSYS_NO_PATHCONV=1 VITE_BASE_PATH=/hyrumcuts/ npm run build`);
+  }
+  const base = normalizeBase(env.VITE_BASE_PATH || '/');
 
   return {
+    base,
     root: webRoot,
     envDir: repoRoot,
     publicDir: resolve(webRoot, 'public'),
-    plugins: [htmlPartials(), adminSpaFallback(), netlifyFiles(env)],
+    plugins: [htmlPartials(), adminSpaFallback(base), netlifyFiles(env), staticHostHtml(env, base)],
     css: {
       postcss: {
         plugins: [tailwindcss(resolve(repoRoot, 'tailwind.config.js')), autoprefixer()],

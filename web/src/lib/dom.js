@@ -7,13 +7,15 @@
  * and `javascript:` URLs are refused.
  */
 
-const URL_ATTRS = new Set(['href', 'src', 'poster', 'action', 'formaction']);
+import { toUrl } from './base.js';
+
+const URL_ATTRS = new Set(['href', 'src', 'poster', 'action', 'formaction', 'srcset']);
 
 export function isSafeUrlAttribute(value) {
   // Browsers drop tabs, newlines and control characters while parsing a URL,
   // so "java\tscript:" still runs. Remove them before checking the scheme.
   // eslint-disable-next-line no-control-regex
-  const v = String(value).replace(/[\u0000- \u007f]+/g, '').toLowerCase();
+  const v = String(value).replace(/[\u0000-\x20\u007f]+/g, '').toLowerCase();
   return !(v.startsWith('javascript:') || v.startsWith('data:text') || v.startsWith('vbscript:'));
 }
 
@@ -37,7 +39,10 @@ export function h(tag, attrs = {}, ...children) {
       if (typeof value === 'function') el.addEventListener(name.slice(2).toLowerCase(), value);
       // A string here would be an inline handler: refuse.
     } else if (URL_ATTRS.has(name)) {
-      if (isSafeUrlAttribute(value)) el.setAttribute(name, String(value));
+      if (!isSafeUrlAttribute(value)) continue;
+      // Root-relative app paths ("/booking/") get the site's base path (e.g. "/hyrumcuts/booking/").
+      const v = String(value);
+      el.setAttribute(name, name === 'srcset' ? v.split(', ').map((part) => toUrl(part)).join(', ') : toUrl(v));
     } else if (value === true) {
       el.setAttribute(name, '');
     } else {

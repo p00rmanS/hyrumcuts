@@ -3,23 +3,50 @@ import { sortableList } from '../components/sortable-list.js';
 import { categoriesApi, itemsApi, saveOrder } from '../services/data.js';
 import { deleteItemFlow, kindLabel, previewItem, thumbUrl } from './portfolio-common.js';
 import { itemHasPlaceholderMedia } from '../../lib/placeholders.js';
+import { matchesSearch, portfolioQuery } from './settings-helpers.js';
 import { emptyState, pageHeader, statusBadge, toast, withBusy } from '../ui.js';
+import { toUrl } from '../../lib/base.js';
 
 /**
  * Manage Work: filter, publish/hide, feature, reorder (drag or Up/Down),
  * archive/restore and permanent delete.
  */
-export default async function portfolioList({ ownerId, query }) {
+export default async function portfolioList({ ownerId, query, navigate }) {
   const cats = await categoriesApi.list();
-  const state = { status: query.get('status') || 'all', categoryId: query.get('category') || '' };
+  const state = { status: query.get('status') || 'all', categoryId: query.get('category') || '', search: query.get('q') || '' };
   let items = [];
+  let searchTimer = null;
   const container = h('div', { class: 'a-page' });
   const listHost = h('div', { 'aria-live': 'polite' });
 
-  const statusSel = h('select', { id: 'flt-status', class: 'a-input', onChange: (e) => { state.status = e.target.value; load(); } }, [['all', 'All (not archived)'], ['published', 'Published'], ['draft', 'Drafts'], ['placeholder', 'Still placeholders'], ['archived', 'Archived']].map(([v, l]) => h('option', { value: v, selected: v === state.status }, l)));
-  const catSel = h('select', { id: 'flt-cat', class: 'a-input', onChange: (e) => { state.categoryId = e.target.value; load(); } }, h('option', { value: '' }, 'All categories'), cats.map((c) => h('option', { value: c.id, selected: c.id === state.categoryId }, c.name)));
+  const statusSel = h('select', { id: 'flt-status', class: 'a-input', onChange: (e) => { state.status = e.target.value; syncUrl(); load(); } }, [['all', 'All (not archived)'], ['published', 'Published'], ['draft', 'Drafts'], ['placeholder', 'Still placeholders'], ['archived', 'Archived']].map(([v, l]) => h('option', { value: v, selected: v === state.status }, l)));
+  const catSel = h('select', { id: 'flt-cat', class: 'a-input', onChange: (e) => { state.categoryId = e.target.value; syncUrl(); load(); } }, h('option', { value: '' }, 'All categories'), cats.map((c) => h('option', { value: c.id, selected: c.id === state.categoryId }, c.name)));
 
-  const filtered = () => state.status !== 'all' || Boolean(state.categoryId);
+  const searchInput = h('input', {
+    id: 'flt-search',
+    type: 'search',
+    class: 'a-input',
+    placeholder: 'Title, haircut or category',
+    autocomplete: 'off',
+    enterkeyhint: 'search',
+    onInput: (e) => {
+      state.search = e.target.value;
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        syncUrl();
+        draw();
+      }, 150);
+    },
+  });
+  searchInput.value = state.search;
+  const countLine = h('p', { class: 'text-sm text-muted mb-3', role: 'status', 'aria-live': 'polite' });
+
+  const filtered = () => state.status !== 'all' || Boolean(state.categoryId) || Boolean(state.search.trim());
+
+  /** Keep the filters in the address bar, so refresh and Back keep them. */
+  function syncUrl() {
+    history.replaceState(history.state, '', toUrl(`/admin/portfolio${portfolioQuery(state)}`));
+  }
 
   async function load() {
     listHost.replaceChildren(h('div', { class: 'a-skeleton h-24 w-full' }));
@@ -48,7 +75,7 @@ export default async function portfolioList({ ownerId, query }) {
     const publishToggle = h('button', { type: 'button', class: 'a-btn-secondary a-btn-sm', onClick: async (e) => {
       if (!item.is_published && !item.alt_text.trim()) {
         toast('Add alt text before publishing. Opening the item so you can add it.', { type: 'info' });
-        location.assign(`/admin/portfolio/${item.id}`);
+        navigate(`/admin/portfolio/${item.id}`);
         return;
       }
       await withBusy(e.currentTarget, () => act(() => itemsApi.update(item.id, { is_published: !item.is_published }), item.is_published ? 'Hidden. It\'s now a draft.' : 'Published. It\'s live on your website.'), '…');
@@ -81,17 +108,30 @@ export default async function portfolioList({ ownerId, query }) {
     );
   }
 
+  function clearFilters() {
+    state.status = 'all';
+    state.categoryId = '';
+    state.search = '';
+    statusSel.value = 'all';
+    catSel.value = '';
+    searchInput.value = '';
+    syncUrl();
+    load();
+  }
+
   function draw() {
-    if (items.length === 0) {
+    const visible = items.filter((i) => matchesSearch(i, state.search));
+    countLine.textContent = filtered() && items.length ? `Showing ${visible.length} of ${items.length}${state.search.trim() ? ` matching “${state.search.trim()}”` : ''}.` : '';
+    if (visible.length === 0) {
       listHost.replaceChildren(
         filtered()
-          ? emptyState({ title: 'Nothing matches those filters', message: 'Try a different category or status.', action: h('button', { type: 'button', class: 'a-btn-secondary', onClick: () => { state.status = 'all'; state.categoryId = ''; statusSel.value = 'all'; catSel.value = ''; load(); } }, 'Clear filters') })
+          ? emptyState({ title: 'Nothing matches', message: 'Try a different search, category or status.', action: h('button', { type: 'button', class: 'a-btn-secondary', onClick: clearFilters }, 'Clear filters') })
           : emptyState({ title: 'No work yet', message: 'Upload your first photos to build your portfolio. Nothing goes public until you publish it.', action: h('a', { href: '/admin/portfolio/add', class: 'a-btn-primary' }, 'Add your first work') }),
       );
       return;
     }
     if (filtered()) {
-      listHost.replaceChildren(h('p', { class: 'text-sm text-muted mb-3' }, 'Clear the filters to reorder your work.'), h('ul', { class: 'space-y-2' }, items.map((i) => h('li', {}, row(i, null)))));
+      listHost.replaceChildren(h('p', { class: 'text-sm text-muted mb-3' }, 'Clear the search and filters to reorder your work. ', h('button', { type: 'button', class: 'underline font-semibold', onClick: clearFilters }, 'Clear them')), h('ul', { class: 'space-y-2' }, visible.map((i) => h('li', {}, row(i, null)))));
       return;
     }
     const list = sortableList({
@@ -108,7 +148,14 @@ export default async function portfolioList({ ownerId, query }) {
 
   container.append(
     pageHeader('Manage work', 'Everything in your portfolio. Drafts and archived work are never visible to visitors.', h('a', { href: '/admin/portfolio/add', class: 'a-btn-primary' }, '+ Add work')),
-    h('div', { class: 'grid gap-3 sm:grid-cols-2 mb-6 max-w-xl' }, h('div', {}, h('label', { class: 'a-label', for: 'flt-status' }, 'Show'), statusSel), h('div', {}, h('label', { class: 'a-label', for: 'flt-cat' }, 'Category'), catSel)),
+    h(
+      'div',
+      { class: 'grid gap-3 sm:grid-cols-3 mb-4 max-w-3xl', role: 'search' },
+      h('div', {}, h('label', { class: 'a-label', for: 'flt-search' }, 'Search'), searchInput),
+      h('div', {}, h('label', { class: 'a-label', for: 'flt-status' }, 'Show'), statusSel),
+      h('div', {}, h('label', { class: 'a-label', for: 'flt-cat' }, 'Category'), catSel),
+    ),
+    countLine,
     listHost,
   );
   await load();

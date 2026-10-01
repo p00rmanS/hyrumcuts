@@ -1,3 +1,4 @@
+import { toUrl } from './base.js';
 import { config } from './env.js';
 
 /**
@@ -15,7 +16,7 @@ export function publicMediaUrl(path, options = {}) {
   if (!path || typeof path !== 'string') return '';
   // Bundled starter files are served from this site itself. A real Storage path can
   // never start with "/" (the database requires the owner id first).
-  if (path.startsWith('/assets/')) return path;
+  if (path.startsWith('/assets/')) return toUrl(path);
   const base = (options.supabaseUrl ?? config.supabaseUrl).replace(/\/+$/, '');
   const bucket = options.bucket ?? config.bucket;
   if (!base) return '';

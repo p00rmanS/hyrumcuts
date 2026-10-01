@@ -279,6 +279,58 @@ try {
   const queueOther = await other.from('storage_cleanup_queue').select('*');
   const queueAnon = await anon.from('storage_cleanup_queue').select('*');
   check('nobody else can read the cleanup queue', queueOther.data?.length === 0 && (Boolean(queueAnon.error) || queueAnon.data?.length === 0));
+
+  // -------------------------------------------------------------------------
+  section('Appointment requests (booking form inbox)');
+  const request = {
+    full_name: 'Test Visitor',
+    phone: '(801) 555-0142',
+    email: 'visitor@example.test',
+    service: 'Skin Fade',
+    client_type: 'first_time',
+    preferred_date: '2030-01-15',
+    preferred_time_slot: 'Morning (9am–12pm)',
+    notes: 'Security test',
+    consent: true,
+  };
+  const submit = await anon.from('appointment_requests').insert(request);
+  check('a visitor can submit a request', !submit.error, submit.error?.message);
+  const readBack = await anon.from('appointment_requests').select('*');
+  check('a visitor cannot read any request back', denied(readBack));
+  const forged = await anon.from('appointment_requests').insert({ ...request, status: 'booked' });
+  check('a visitor cannot set the status', Boolean(forged.error));
+  const hijack = await anon.from('appointment_requests').insert({ ...request, owner_id: OTHER });
+  check('a visitor cannot choose which owner receives it', Boolean(hijack.error));
+  const noConsent = await anon.from('appointment_requests').insert({ ...request, consent: false });
+  check('a request without consent is refused', Boolean(noConsent.error));
+  const badEmail = await anon.from('appointment_requests').insert({ ...request, email: 'not-an-email' });
+  check('a malformed email is refused by the database', Boolean(badEmail.error));
+
+  const inbox = await owner.from('appointment_requests').select('*');
+  check('the owner sees the request', inbox.data?.length === 1 && inbox.data[0].email === request.email, inbox.error?.message);
+  check('it arrives as "new" and belongs to the owner', inbox.data?.[0]?.status === 'new' && inbox.data?.[0]?.owner_id === OWNER);
+  const reqId = inbox.data?.[0]?.id;
+  const otherRead = await other.from('appointment_requests').select('*');
+  check('another signed-in user cannot read requests', denied(otherRead));
+  const otherUpd = await other.from('appointment_requests').update({ status: 'closed' }).eq('id', reqId).select();
+  check('another signed-in user cannot change a request', denied(otherUpd));
+  const otherDel = await other.from('appointment_requests').delete().eq('id', reqId).select();
+  check('another signed-in user cannot delete a request', denied(otherDel));
+  const anonDel = await anon.from('appointment_requests').delete().eq('id', reqId).select();
+  check('a visitor cannot delete a request', denied(anonDel));
+  const editName = await owner.from('appointment_requests').update({ full_name: 'Changed' }).eq('id', reqId).select();
+  check("even the owner cannot rewrite what the client sent (only the status)", Boolean(editName.error));
+  const mark = await owner.from('appointment_requests').update({ status: 'contacted' }).eq('id', reqId).select('status');
+  check('the owner can mark it contacted', mark.data?.[0]?.status === 'contacted', mark.error?.message);
+  const requestAudit = await admin.from('admin_audit_log').select('id').eq('entity_type', 'appointment_requests');
+  check('requests never enter the audit log (no personal data copied)', (requestAudit.data ?? []).length === 0);
+  const del = await owner.from('appointment_requests').delete().eq('id', reqId).select('id');
+  check('the owner can delete a request', del.data?.length === 1, del.error?.message);
+
+  // Flood limit: 20 per 10 minutes across the whole site.
+  const burst = [];
+  for (let i = 0; i < 21; i += 1) burst.push(await anon.from('appointment_requests').insert(request));
+  check('a flood of requests is cut off', burst.slice(0, 19).every((r) => !r.error) && burst.some((r) => r.error), burst.find((r) => r.error)?.error?.message);
 } catch (error) {
   process.stderr.write(`\nSETUP ERROR: ${error.message}\n`);
   exitCode = 2;

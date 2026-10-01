@@ -1,0 +1,81 @@
+# Build and publish the site to GitHub Pages: https://p00rmans.github.io/hyrumcuts/
+#
+# Runs on every push to main (and on demand from the Actions tab). Lint and unit
+# tests must pass before anything is published.
+#
+# Repository settings needed once (Settings > Secrets and variables > Actions >
+# Variables tab). These are PUBLIC values; they end up in the website's code:
+#   VITE_SUPABASE_URL              https://<project-ref>.supabase.co
+#   VITE_SUPABASE_PUBLISHABLE_KEY  sb_publishable_...  (never a secret / service_role key)
+# Optional overrides (defaults shown):
+#   VITE_BASE_PATH  /hyrumcuts/   ("/" once a custom domain is connected)
+#   VITE_SITE_URL   https://p00rmans.github.io/hyrumcuts
+# And Settings > Pages > Source: "GitHub Actions".
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_SITE_SLUG: hyrumhaircuts
+      VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || '/hyrumcuts/' }}
+      VITE_SITE_URL: ${{ vars.VITE_SITE_URL || 'https://p00rmans.github.io/hyrumcuts' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Check the Supabase settings
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "::warning::VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY are not set. The site will show its built-in starter content and /admin will say 'Setup needed'."
+          fi
+          case "$VITE_SUPABASE_PUBLISHABLE_KEY" in
+            sb_secret_*) echo "::error::VITE_SUPABASE_PUBLISHABLE_KEY is a SECRET key. Use the publishable key." ; exit 1 ;;
+          esac
+
+      - name: Build
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

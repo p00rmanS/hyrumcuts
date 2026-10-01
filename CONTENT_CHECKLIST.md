@@ -31,7 +31,7 @@ The site launches **full of placeholder content** (the same sample photos, portr
 - [ ] Google Maps / directions link, if you want a "Get directions" link.
 - [ ] **Instagram** and **Facebook** links. *Settings → Social Links.*
 - [ ] **Calendly (or other booking) link.** *Settings → Booking Link.* The old site used a **temporary demo link** (`calendly.com/jamesbaldwindean2026/…`). That link is **not** carried over: enter Hyrum's real one. Until then the Book buttons go to the on-site request form.
-- [ ] Turn on **Netlify Forms email notifications** so appointment requests reach you (Netlify → Forms). *(developer/Netlify setting)*
+- [ ] Send yourself a **test request** from the live booking page, check it appears in **Requests**, then delete it.
 
 ## Reviews
 
@@ -39,7 +39,7 @@ The site launches **full of placeholder content** (the same sample photos, portr
 
 ## Domain and SEO
 
-- [ ] Preferred domain confirmed (`hyrumhaircuts.com`) and connected in Netlify. *(developer)*
+- [ ] Optional: a custom domain (e.g. `hyrumhaircuts.com`). The site starts at `p00rmans.github.io/hyrumcuts/`; a domain can be connected in GitHub Pages later. *(developer)*
 - [ ] Page title and description you're happy with. *Settings → SEO.*
 - [ ] Main website address once the domain is live. *Settings → SEO.*
 
@@ -51,5 +51,5 @@ The site launches **full of placeholder content** (the same sample photos, portr
 ## For the developer (see README)
 
 - [ ] Create the Supabase project, apply migrations, register the owner, disable public sign-ups, configure SMTP.
-- [ ] Set the four Netlify environment variables and deploy.
+- [ ] Set the GitHub repo variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`), set Pages to "GitHub Actions", and push to `main` (see README §4).
 - [ ] Do not launch while the dashboard still lists placeholders (photos, `[Placeholder review]`, `[Owner to review…]`, bio, portrait, starter hero clip).

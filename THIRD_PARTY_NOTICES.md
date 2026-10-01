@@ -32,4 +32,4 @@ No web fonts are downloaded. The design uses local system font stacks (see `tail
 
 ## Third-party services
 
-Supabase (database, auth, storage), Netlify (hosting, Forms) and Calendly (booking widget, loaded only when a Calendly link is configured, and only after a visitor shows intent to book). No analytics or tracking scripts are used.
+Supabase (database, auth, storage, and the appointment-request inbox), GitHub Pages (hosting; Netlify is also supported) and Calendly (booking widget, loaded only when a Calendly link is configured, and only after a visitor shows intent to book). No analytics or tracking scripts are used.

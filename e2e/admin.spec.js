@@ -149,6 +149,88 @@ test.describe.serial('admin', () => {
     await expect(page.getByText(/full email address/i)).toBeVisible();
   });
 
+  test('posts an announcement, schedules it, and turns it off again', async ({ page, browser, isMobile }) => {
+    await signInAsOwner(page);
+    await page.goto('/admin/content/announcement');
+    await expect(page.getByText(/Status: Off/)).toBeVisible();
+    await page.getByLabel(/^Message/).fill('E2E: away next week');
+    await expect(page.getByText(/Status: Showing now/)).toBeVisible(); // updates live, before saving
+    // Desktop saves with the keyboard shortcut; phones use the button.
+    if (isMobile) await page.getByRole('button', { name: 'Save changes' }).click();
+    else await page.keyboard.press('Control+s');
+    await expect(page.getByText('Saved. Your website will show this')).toBeVisible();
+
+    const visitor = await browser.newContext();
+    const pub = await visitor.newPage();
+    await pub.goto('/booking/');
+    const bar = pub.locator('[data-announcement]');
+    await expect(bar).toContainText('E2E: away next week');
+    await pub.getByRole('button', { name: 'Dismiss announcement' }).click();
+    await expect(bar).toBeHidden();
+
+    // Scheduled for the future: gone from the site, and the admin says so.
+    await page.getByLabel(/^Show from/).fill('2099-01-05');
+    await expect(page.getByText(/Status: Scheduled/)).toBeVisible();
+    await page.getByRole('button', { name: 'Save changes' }).click();
+    await expect(page.getByText('Saved. Your website will show this')).toBeVisible();
+    const fresh = await browser.newContext();
+    const pub2 = await fresh.newPage();
+    await pub2.goto('/');
+    await expect(pub2.locator('[data-gallery-item]').first()).toBeVisible();
+    await expect(pub2.locator('[data-announcement]')).toBeHidden();
+    await visitor.close();
+    await fresh.close();
+
+    // Leave the site as it was for the next run.
+    await page.getByLabel(/^Message/).fill('');
+    await page.getByLabel(/^Show from/).fill('');
+    await page.getByRole('button', { name: 'Save changes' }).click();
+    await expect(page.getByText(/Status: Off/)).toBeVisible();
+  });
+
+  test('a visitor sends an appointment request and the owner handles it in Requests', async ({ page, browser }) => {
+    const name = `E2E Visitor ${Date.now()}`;
+    const visitor = await browser.newContext();
+    const pub = await visitor.newPage();
+    await pub.goto('/booking/');
+    await pub.locator('#full_name').fill(name);
+    await pub.locator('#phone').fill('(801) 555-0177');
+    await pub.locator('#email').fill('visitor@example.test');
+    await pub.locator('#client_type').selectOption('first_time');
+    await pub.locator('#preferred_date').fill('2030-03-14');
+    const slot = pub.locator('#preferred_time_slot');
+    if (await slot.isEnabled()) await slot.selectOption({ index: 1 });
+    await pub.locator('#consent').check();
+    await pub.getByRole('button', { name: 'Request Appointment' }).click();
+    await expect(pub).toHaveURL(/\/booking\/thanks\/$/);
+    await visitor.close();
+
+    await signInAsOwner(page);
+    await expect(page.getByText(/new appointment request/)).toBeVisible(); // dashboard alert
+    await page.goto('/admin/requests');
+    const card = page.locator('article').filter({ hasText: name });
+    await expect(card).toBeVisible();
+    await expect(card.getByRole('link', { name: 'Call' })).toHaveAttribute('href', 'tel:8015550177');
+    await card.getByRole('button', { name: 'Mark contacted' }).click();
+    await expect(card.getByText('Contacted', { exact: true })).toBeVisible();
+    await card.getByRole('button', { name: 'Delete' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Delete permanently' }).click();
+    await expect(card).toHaveCount(0);
+  });
+
+  test('searches Manage Work, and the search survives a refresh', async ({ page }) => {
+    await signInAsOwner(page);
+    await page.goto('/admin/portfolio');
+    await page.getByLabel('Search').fill('secret draft');
+    await expect(page.getByText(/Showing 1 of \d+/)).toBeVisible();
+    await expect(page.getByRole('link', { name: 'E2E Secret Draft' }).first()).toBeVisible();
+    await expect(page.getByRole('link', { name: 'E2E Published Cut' })).toHaveCount(0);
+    await expect(page).toHaveURL(/q=secret\+draft/);
+    await page.reload();
+    await expect(page.getByLabel('Search')).toHaveValue('secret draft');
+    await expect(page.getByText(/Showing 1 of \d+/)).toBeVisible();
+  });
+
   test('warns before leaving a form with unsaved changes', async ({ page }) => {
     await signInAsOwner(page);
     await page.goto('/admin/settings/social');

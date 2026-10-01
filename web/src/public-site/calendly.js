@@ -1,3 +1,4 @@
+import { toUrl } from '../lib/base.js';
 import { bookingAction } from '../lib/urls.js';
 
 /**
@@ -54,7 +55,7 @@ export function applyBookingCtas(settings, root = document) {
       cta.setAttribute('target', '_blank');
       cta.setAttribute('rel', 'noopener noreferrer');
     } else {
-      cta.setAttribute('href', '/booking/');
+      cta.setAttribute('href', toUrl('/booking/'));
       cta.removeAttribute('target');
       cta.removeAttribute('rel');
     }
@@ -97,7 +98,7 @@ export function initCalendlyClicks() {
       Calendly.initPopupWidget({ url });
     } catch {
       // Blocked or offline: use the on-site booking page instead.
-      window.location.assign(cta.getAttribute('href') || '/booking/');
+      window.location.assign(cta.getAttribute('href') || toUrl('/booking/'));
     }
   });
 }
