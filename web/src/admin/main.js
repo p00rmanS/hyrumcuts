@@ -4,7 +4,7 @@ import { h, mount } from '../lib/dom.js';
 import { matchRoute, navigate, rememberCurrentUrl, setDirtyGuard, startRouter } from './router.js';
 import { checkOwner, clearAuthCache, onAuthEvent, signOut } from './services/auth.js';
 import { runCleanupQueue } from './services/storage.js';
-import { renderShell } from './shell.js';
+import { refreshRequestBadges, renderShell } from './shell.js';
 import { errorPanel, loading } from './ui.js';
 import { SPA_REDIRECT_KEY, toAppPath, toUrl } from '../lib/base.js';
 
@@ -122,6 +122,7 @@ async function render() {
     if (auth.reason === 'not-owner') return notOwner(auth.user);
 
     const main = renderShell(app, { user: auth.user, activeKey: route.key });
+    refreshRequestBadges();
     mount(main, loading());
 
     const mod = await route.load();

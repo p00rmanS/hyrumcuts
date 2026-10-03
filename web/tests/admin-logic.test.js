@@ -59,6 +59,7 @@ describe('dashboard warnings', () => {
     profile_photo_path: 'o/profile/x.webp',
     instagram_url: 'https://instagram.com/x',
     facebook_url: '',
+    hours_tue: '9am–6pm',
   };
   const counts = { published: 5, drafts: 1, reviews: 2, faqs: 3 };
   it('is quiet when everything is set up', () => {

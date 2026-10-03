@@ -16,8 +16,12 @@ Open the **Dashboard**. Under **Needs your attention** it lists what's still a p
 
 ## Signing in
 
-1. Open **hyrumhaircuts.com/admin** (bookmark it, or add it to your phone's home screen).
+1. Open **p00rmans.github.io/hyrumcuts/admin** (or **yourdomain.com/admin** once a custom domain is connected).
 2. Type your email and password, then tap **Sign in**.
+
+**Put it on your phone's home screen** so it opens like an app, with its own "HH" icon:
+- **iPhone (Safari):** tap the **Share** button, then **Add to Home Screen**.
+- **Android (Chrome):** tap the **⋮** menu, then **Add to Home screen** (or **Install app**).
 
 **Forgot your password?** On the sign-in page tap **Forgot your password?**, type your email and tap **Email me a reset link**. Open the email (check spam too), tap the link, and choose a new password. Passwords need at least 12 characters, with a capital letter, a small letter and a number. A sentence works well: `Fresh-Fades-Every-Day-2026`.
 
@@ -102,7 +106,7 @@ When you (or a client) open a photo in the gallery, the web address changes to p
 
 ## Appointment requests
 
-When someone fills in the request form on your booking page, it lands in **Requests** (in the menu, and in the bottom bar on your phone). The **Dashboard** tells you when new ones arrive.
+When someone fills in the request form on your booking page, it lands in **Requests** (in the menu, and in the bottom bar on your phone). A small number next to **Requests** shows how many are new, and the **Dashboard** tells you too.
 
 Each request shows the name, the day and time they'd like, the service, and any notes, with **Call**, **Text** and **Email** buttons that open your phone's apps. Then move it along with one tap: **Mark contacted**, **Mark booked**, or **Close** when you're done. Use the **Show** menu to see closed ones again.
 
@@ -118,6 +122,7 @@ Under **Settings**:
 
 - **Booking Link**: paste your Calendly (or other) link. Your booking system stays exactly as it is; this only changes where the **Book** buttons go. Choose **None** if you only want the on-site request form.
 - **Services**: the cuts you offer, each with an optional one-line description. They appear in the **Services** section of your home page and as the "Service" choices on the request form. Drag to reorder, and turn one off to hide it everywhere. (No prices are ever shown.)
+- **Opening Hours**: type your hours for each day, like "9am–6pm" or "Closed", plus an optional note ("By appointment only"). Days with the same hours are grouped on your site ("Tue–Thu 9am–6pm"). Leave a day empty to leave it out.
 - **Contact**: phone, public email, directions link.
 - **Social Links**: Instagram and Facebook. Icons appear in the footer only for the ones you fill in.
 - **SEO**: how your site looks in Google and when a link is shared, plus a sharing picture. Only write things that are true.

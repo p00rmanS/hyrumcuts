@@ -1,7 +1,7 @@
 import instagramSvg from '../assets/icons/instagram.svg?raw';
 import facebookSvg from '../assets/icons/facebook.svg?raw';
 import { h, mount, setVisible } from '../lib/dom.js';
-import { hasAboutContent, usableFaqs, usableReviews, usableServices } from '../lib/content.js';
+import { hasAboutContent, openingHours, usableFaqs, usableReviews, usableServices } from '../lib/content.js';
 import { publicMediaUrl } from '../lib/media-url.js';
 import { safeHttpUrl } from '../lib/urls.js';
 import { setSectionVisible } from './bind.js';
@@ -33,6 +33,29 @@ export function renderReviews(reviews) {
       ),
     ),
   );
+}
+
+/** Opening hours in the Contact section; neighbouring days with the same hours are grouped. */
+export function renderHours(settings) {
+  const wrap = document.querySelector('[data-hours]');
+  const list = document.querySelector('[data-hours-list]');
+  const note = document.querySelector('[data-hours-note]');
+  if (!wrap || !list) return;
+  const lines = openingHours(settings);
+  const noteText = settings.hours_note?.trim() ?? '';
+  setVisible(wrap, lines.length > 0 || Boolean(noteText));
+  mount(
+    list,
+    lines.flatMap((line) => [
+      // "Tue–Sat" on screen, "Tuesday to Saturday" for screen readers.
+      h('dt', { class: 'font-semibold' }, h('span', { 'aria-hidden': 'true' }, line.days), h('span', { class: 'sr-only' }, line.label)),
+      h('dd', { class: 'text-muted' }, line.hours),
+    ]),
+  );
+  if (note) {
+    note.textContent = noteText;
+    setVisible(note, Boolean(noteText));
+  }
 }
 
 /** The cuts Hyrum offers (the same list as the request form). Names and descriptions only, never prices. */

@@ -27,6 +27,7 @@ export const ROUTES = [
   { path: '/admin/reviews', key: 'reviews', title: 'Reviews', load: () => import('./pages/list-editor.js').then((m) => m.forReviews()) },
   { path: '/admin/settings/booking', key: 'booking', title: 'Booking link', load: () => import('./pages/settings-page.js').then((m) => m.forSection('booking', 'booking')) },
   { path: '/admin/settings/services', key: 'services', title: 'Services', load: () => import('./pages/list-editor.js').then((m) => m.forServices()) },
+  { path: '/admin/settings/hours', key: 'hours', title: 'Opening hours', load: () => import('./pages/settings-page.js').then((m) => m.forSection('hours', 'hours')) },
   { path: '/admin/settings/contact', key: 'contact', title: 'Contact', load: () => import('./pages/settings-page.js').then((m) => m.forSection('contact', 'contact')) },
   { path: '/admin/settings/social', key: 'social', title: 'Social links', load: () => import('./pages/settings-page.js').then((m) => m.forSection('social', 'social')) },
   { path: '/admin/settings/seo', key: 'seo', title: 'Search & sharing', load: () => import('./pages/settings-page.js').then((m) => m.forSection('seo', 'seo')) },

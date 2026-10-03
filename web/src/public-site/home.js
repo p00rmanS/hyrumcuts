@@ -5,7 +5,7 @@ import { initAccordion } from './chrome.js';
 import { initGallery } from './gallery.js';
 import { initHero } from './hero.js';
 import { applySeo } from './seo.js';
-import { renderAbout, renderFaqs, renderInstagram, renderReviews, renderServices } from './sections.js';
+import { renderAbout, renderFaqs, renderHours, renderInstagram, renderReviews, renderServices } from './sections.js';
 import { initChrome, loadSite } from './site.js';
 
 initChrome();
@@ -23,6 +23,7 @@ const { content, settings } = await loadSite();
 applySeo(settings, { home: true });
 initHero(settings);
 renderAbout(settings);
+renderHours(settings);
 
 if (!content.reachable || content.errors.includes('items')) {
   showGalleryError();

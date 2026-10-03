@@ -99,6 +99,20 @@ export const SETTINGS_SECTIONS = {
       { key: 'announcement_ends_on', label: 'Show until (optional)', type: 'date', help: 'The last day it shows. Leave empty to keep it up until you remove it.' },
     ],
   },
+  hours: {
+    title: 'Opening hours',
+    description: 'When you take clients. Shown in the Contact section of your website. Leave a day empty to leave it out.',
+    fields: [
+      { key: 'hours_mon', label: 'Monday', type: 'text', max: 40, example: '9am–6pm' },
+      { key: 'hours_tue', label: 'Tuesday', type: 'text', max: 40, example: '9am–6pm' },
+      { key: 'hours_wed', label: 'Wednesday', type: 'text', max: 40, example: '9am–6pm' },
+      { key: 'hours_thu', label: 'Thursday', type: 'text', max: 40, example: '9am–8pm' },
+      { key: 'hours_fri', label: 'Friday', type: 'text', max: 40, example: '9am–8pm' },
+      { key: 'hours_sat', label: 'Saturday', type: 'text', max: 40, example: '10am–4pm' },
+      { key: 'hours_sun', label: 'Sunday', type: 'text', max: 40, example: 'Closed' },
+      { key: 'hours_note', label: 'Note under the hours (optional)', type: 'text', max: 160, example: 'By appointment only. Walk-ins when there is space.' },
+    ],
+  },
   booking: {
     title: 'Booking link',
     description: 'Where the "Book" buttons send people. Your booking provider stays exactly as it is; this only changes the link.',

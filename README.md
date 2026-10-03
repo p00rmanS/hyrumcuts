@@ -74,6 +74,7 @@ CONTENT_CHECKLIST.md      what Hyrum still needs to provide
 | `…000400_storage_media` | `site-media` bucket (public read, 50 MiB, MIME allow-list), owner-only object policies, `storage_cleanup_queue` |
 | `…000500_owner_bootstrap` | first-run starter content (bio, FAQ answers, placeholder reviews, categories, services) and `private.bootstrap_owner(email)` |
 | `20260930000100_appointment_requests` | the booking-form inbox: visitors may only insert (column-level grants), only the owner can read / change status / delete; server-set owner and status; a site-wide flood limit; never audit-logged |
+| `20261002000100_opening_hours` | per-day opening-hours text and a note on `site_settings` |
 | `20260923000100_site_announcement` | announcement-bar columns on `site_settings` (text, optional https link, optional start/end dates) |
 
 > **Deploy order:** apply migrations *before* deploying a frontend that uses them. The public site selects every settings column it knows about; if a column is missing, the settings request fails and the site falls back to its bundled brand copy.
@@ -252,7 +253,7 @@ What `npm run build` generates for Netlify (`scripts/netlify-headers.js`):
 ## 5. Testing and verification
 
 ```bash
-npm test               # 197 unit tests (config safety, URL rules, media validation, upload cleanup on failure, gallery filter/sort, settings validation, route guard, announcement scheduling, starter-content integrity…)
+npm test               # 203 unit tests (config safety, URL rules, media validation, upload cleanup on failure, gallery filter/sort, settings validation, route guard, announcement scheduling, starter-content integrity…)
 npm run lint
 npm run db:start && npm run db:reset
 npm run db:test        # pgTAP: 39 RLS/Storage assertions inside Postgres
@@ -261,7 +262,7 @@ npm run test:e2e       # Playwright (needs the local stack + a built preview)
 npm audit
 ```
 
-**Last full run** (2026-09-30, local Supabase, Windows 11, Edge): 197 unit tests, ESLint, production build (root and `/hyrumcuts/` base), `npm audit` (0 vulnerabilities), all 7 migrations applied by `db reset`, 39/39 pgTAP, 81/81 `test:rls` (including the Requests inbox and a 7 MB resumable upload), and 57 Playwright tests passing at desktop and phone size (1 phone-only test skipped on desktop by design). The `/hyrumcuts/` build was also checked by hand on a GitHub-Pages-like static server (deep admin links via 404.html, booking request into the inbox).
+**Last full run** (2026-09-30, local Supabase, Windows 11, Edge): 203 unit tests, ESLint, production build (root and `/hyrumcuts/` base), `npm audit` (0 vulnerabilities), all 8 migrations applied by `db reset`, 39/39 pgTAP, 81/81 `test:rls` (including the Requests inbox and a 7 MB resumable upload), and 57 Playwright tests passing at desktop and phone size (1 phone-only test skipped on desktop by design). The `/hyrumcuts/` build was also checked by hand on a GitHub-Pages-like static server (deep admin links via 404.html, booking request into the inbox).
 
 > Run `npm run test:e2e` against the **local** stack only. If your `.env` points at a hosted project, override it for that shell first: `VITE_SUPABASE_URL=http://127.0.0.1:54321` and `VITE_SUPABASE_PUBLISHABLE_KEY=<local publishable key from supabase status>` (variables already set in the environment take priority over `.env`).
 

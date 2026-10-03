@@ -26,6 +26,7 @@ The site launches **full of placeholder content** (the same sample photos, portr
 
 ## Contact, social and booking
 
+- [ ] **Opening hours** for each day, and an optional note. *Settings → Opening Hours.*
 - [ ] Business **phone number** and public **email**. *Settings → Contact.* (The Contact section stays hidden until at least one is added.)
 - [ ] Email for privacy requests (optional; falls back to the public email). The privacy page currently tells people to use the contact details on the site.
 - [ ] Google Maps / directions link, if you want a "Get directions" link.

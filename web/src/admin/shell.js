@@ -1,5 +1,6 @@
 import { h, mount } from '../lib/dom.js';
 import { signOut } from './services/auth.js';
+import { countNewRequests } from './services/data.js';
 import { confirmDialog, toast } from './ui.js';
 import { toUrl } from '../lib/base.js';
 
@@ -41,6 +42,7 @@ export const NAV = [
     items: [
       { label: 'Booking Link', href: '/admin/settings/booking', key: 'booking' },
       { label: 'Services', href: '/admin/settings/services', key: 'services' },
+      { label: 'Opening Hours', href: '/admin/settings/hours', key: 'hours' },
       { label: 'Contact', href: '/admin/settings/contact', key: 'contact' },
       { label: 'Social Links', href: '/admin/settings/social', key: 'social' },
       { label: 'SEO', href: '/admin/settings/seo', key: 'seo' },
@@ -71,6 +73,29 @@ function icon(pathData, size = 22) {
   return svg;
 }
 
+/** Count bubble for "Requests"; filled in by updateRequestBadges(). Hidden while zero. */
+function requestBadge(extra = '') {
+  return h('span', { class: `hidden min-w-[1.25rem] rounded-full bg-copper-dark px-1.5 text-center text-[11px] font-bold leading-5 text-ivory ${extra}`, dataset: { newRequests: '' } });
+}
+
+/** Show how many requests are waiting, everywhere the Requests link appears. */
+export function updateRequestBadges(count) {
+  for (const el of document.querySelectorAll('[data-new-requests]')) {
+    const n = Number(count) || 0;
+    el.textContent = n > 99 ? '99+' : String(n);
+    el.classList.toggle('hidden', n === 0);
+    // Screen readers hear "Requests, 2 new" rather than a bare number.
+    el.setAttribute('aria-label', `${n} new`);
+  }
+}
+
+/** Re-count new requests and update the bubble. Never blocks or breaks a page. */
+export function refreshRequestBadges() {
+  countNewRequests()
+    .then((n) => updateRequestBadges(n ?? 0))
+    .catch(() => {});
+}
+
 function navLink(item, activeKey, { compact = false } = {}) {
   const active = item.key === activeKey;
   return h(
@@ -81,6 +106,7 @@ function navLink(item, activeKey, { compact = false } = {}) {
       class: `flex items-center min-h-[44px] px-3 ${compact ? 'text-base' : 'text-sm'} ${active ? 'bg-ink text-ivory font-semibold' : 'text-ink hover:bg-ink/5'}`,
     },
     item.label,
+    item.key === 'requests' ? requestBadge('ml-auto') : null,
   );
 }
 
@@ -146,9 +172,10 @@ export function renderShell(root, { user, activeKey }) {
   const tab = (label, href, key, pathData) =>
     h(
       'a',
-      { href, 'aria-current': key === activeKey ? 'page' : undefined, class: `flex flex-1 flex-col items-center justify-center gap-0.5 min-h-[56px] text-xs ${key === activeKey ? 'text-ink font-bold' : 'text-muted'}` },
+      { href, 'aria-current': key === activeKey ? 'page' : undefined, class: `relative flex flex-1 flex-col items-center justify-center gap-0.5 min-h-[56px] text-xs ${key === activeKey ? 'text-ink font-bold' : 'text-muted'}` },
       icon(pathData),
       label,
+      key === 'requests' ? requestBadge('absolute top-1 left-1/2 ml-2') : null,
     );
   const moreBtn = h('button', { type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', 'aria-controls': drawerId, class: 'flex flex-1 flex-col items-center justify-center gap-0.5 min-h-[56px] text-xs text-muted', onClick: openDrawer }, icon(ICONS.more), 'More');
 

@@ -10,6 +10,7 @@ export const SECTION_PUBLIC_PATH = Object.freeze({
   about: '/#about',
   announcement: '/',
   booking: '/booking/',
+  hours: '/#contact',
   contact: '/#contact',
   social: '/#contact',
   seo: null,

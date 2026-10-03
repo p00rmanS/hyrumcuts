@@ -55,6 +55,9 @@ export function computeWarnings(settings, counts, placeholders) {
   if (counts.published === 0) {
     out.push({ id: 'portfolio', level: 'warn', message: 'No portfolio work is published yet, so visitors see an empty gallery.', href: '/admin/portfolio/add', cta: 'Add your first work' });
   }
+  if (['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'note'].every((d) => empty(settings[`hours_${d}`]))) {
+    out.push({ id: 'hours', level: 'info', message: 'Add your opening hours so people know when to book.', href: '/admin/settings/hours', cta: 'Add hours' });
+  }
   if (empty(settings.instagram_url) && empty(settings.facebook_url)) {
     out.push({ id: 'social', level: 'info', message: 'Add your Instagram or Facebook link so people can follow you.', href: '/admin/settings/social', cta: 'Add social links' });
   }

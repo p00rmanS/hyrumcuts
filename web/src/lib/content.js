@@ -47,6 +47,14 @@ export const SETTINGS_FALLBACK = Object.freeze({
   announcement_link_label: '',
   announcement_starts_on: null,
   announcement_ends_on: null,
+  hours_mon: '',
+  hours_tue: '',
+  hours_wed: '',
+  hours_thu: '',
+  hours_fri: '',
+  hours_sat: '',
+  hours_sun: '',
+  hours_note: '',
   hero_video_path: null,
   hero_poster_path: null,
   profile_photo_path: null,
@@ -210,6 +218,47 @@ export function formatDay(isoDate) {
   const d = new Date(`${isoDate}T12:00:00Z`);
   if (Number.isNaN(d.getTime())) return isoDate;
   return new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }).format(d);
+}
+
+export const WEEKDAYS = Object.freeze([
+  ['mon', 'Mon', 'Monday'],
+  ['tue', 'Tue', 'Tuesday'],
+  ['wed', 'Wed', 'Wednesday'],
+  ['thu', 'Thu', 'Thursday'],
+  ['fri', 'Fri', 'Friday'],
+  ['sat', 'Sat', 'Saturday'],
+  ['sun', 'Sun', 'Sunday'],
+]);
+
+/**
+ * Opening hours as display lines, with neighbouring days that share the same
+ * text grouped: "Tue–Sat: 9am–6pm". Days left empty are skipped (not shown as
+ * "closed": the owner may simply not have filled them in).
+ * @returns {Array<{ days: string, label: string, hours: string }>} label is the spoken form
+ */
+export function openingHours(settings) {
+  const out = [];
+  let run = null;
+  const flush = () => {
+    if (!run) return;
+    const same = run.from === run.to;
+    out.push({ days: same ? run.from[1] : `${run.from[1]}–${run.to[1]}`, label: same ? run.from[2] : `${run.from[2]} to ${run.to[2]}`, hours: run.hours });
+    run = null;
+  };
+  for (const day of WEEKDAYS) {
+    const hours = String(settings[`hours_${day[0]}`] ?? '').trim();
+    if (!hours) {
+      flush();
+      continue;
+    }
+    if (run && run.hours.toLowerCase() === hours.toLowerCase()) run.to = day;
+    else {
+      flush();
+      run = { from: day, to: day, hours };
+    }
+  }
+  flush();
+  return out;
 }
 
 /** Hero media URLs, with bundled fallbacks. */

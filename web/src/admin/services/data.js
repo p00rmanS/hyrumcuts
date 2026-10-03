@@ -188,6 +188,11 @@ export async function getPlaceholderSummary(settings) {
 
 const REQUEST_SELECT = 'id,full_name,phone,email,service,client_type,preferred_date,preferred_time_slot,notes,status,created_at';
 
+/** How many requests are still "new" (unread). null if it can't be checked right now. */
+export async function countNewRequests() {
+  return count('appointment_requests', (q) => q.eq('status', 'new'));
+}
+
 export const requestsApi = {
   /** @param {{ status?: 'open'|'all'|'new'|'contacted'|'booked'|'closed' }} [filter] open = everything not closed */
   async list({ status = 'open' } = {}) {

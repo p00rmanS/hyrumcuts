@@ -2,6 +2,7 @@ import { h } from '../../lib/dom.js';
 import { CLIENT_TYPE_LABELS, formatRequestDate, REQUEST_STATUSES } from '../../lib/requests.js';
 import { mailtoHref, telHref } from '../../lib/urls.js';
 import { requestsApi } from '../services/data.js';
+import { refreshRequestBadges } from '../shell.js';
 import { confirmDialog, emptyState, pageHeader, timeAgo, toast, withBusy } from '../ui.js';
 
 /**
@@ -41,6 +42,7 @@ export default async function requestsPage({ query }) {
     listHost.replaceChildren(h('div', { class: 'a-skeleton h-32 w-full' }));
     try {
       rows = await requestsApi.list({ status: state.status });
+      refreshRequestBadges();
     } catch (error) {
       listHost.replaceChildren(h('div', { class: 'a-alert-error', role: 'alert' }, error.message));
       return;

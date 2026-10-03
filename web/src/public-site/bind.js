@@ -1,3 +1,4 @@
+import { openingHours } from '../lib/content.js';
 import { setVisible } from '../lib/dom.js';
 import { mailtoHref, safeHttpUrl, telHref } from '../lib/urls.js';
 
@@ -46,7 +47,8 @@ export function applySettings(settings, root = document) {
     setVisible(el, Boolean(mapUrl));
     el.querySelector('[data-map-link]')?.setAttribute('href', mapUrl || '#');
   }
-  const hasContact = hasPhone || hasEmail || hasLocation || Boolean(mapUrl);
+  const hasHours = openingHours(settings).length > 0 || hasText(settings.hours_note);
+  const hasContact = hasPhone || hasEmail || hasLocation || Boolean(mapUrl) || hasHours;
   for (const el of root.querySelectorAll('[data-contact]')) setVisible(el, hasContact);
   for (const el of root.querySelectorAll('[data-nav-contact]')) setVisible(el, hasContact);
 
