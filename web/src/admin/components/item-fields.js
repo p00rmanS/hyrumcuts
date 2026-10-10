@@ -64,6 +64,17 @@ export function itemFields({ categories, values = {}, showPublish = true, defaul
       if (!result.ok) (result.errors.title ? title.input : result.errors.alt_text ? alt.input : description.input).focus();
       return result.ok;
     },
+    /** Empty the form after a save, so the next upload starts clean (no accidental duplicates or carried-over ticks). */
+    reset() {
+      for (const f of [title, alt, description, service]) {
+        f.input.value = '';
+        f.setError('');
+        f.input.dispatchEvent(new Event('input', { bubbles: true })); // refresh the character counter
+      }
+      catId.value = defaultCategoryId ?? '';
+      featured.input.checked = false;
+      if (publish) publish.input.checked = false;
+    },
     inputs: { title: title.input, alt: alt.input, publish: publish?.input ?? null, category: catId },
   };
 }

@@ -71,3 +71,6 @@ Thumbs.db
 
 # Playwright temporary credentials
 e2e/.auth/
+
+# Raw media dropped in for uploading through /admin. It lives in Supabase Storage, not in git.
+web/src/assets/vidimage/

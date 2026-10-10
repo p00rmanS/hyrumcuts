@@ -32,7 +32,7 @@ export const VIDEO = Object.freeze({
   // Files above this use resumable (TUS) uploads with progress and retry.
   resumableThresholdBytes: 6 * MB,
   hero: { warnBytes: 20 * MB, maxBytes: 50 * MB, maxSeconds: 30, recommendedSeconds: [10, 20] },
-  clip: { warnBytes: 15 * MB, maxBytes: 30 * MB, maxSeconds: 60 },
+  clip: { warnBytes: 15 * MB, maxBytes: 30 * MB, maxSeconds: 90 }, // 90 s fits a full phone reel
   // TUS chunk size is fixed by Supabase Storage. Do not change it.
   tusChunkBytes: 6 * MB,
   tusRetryDelays: [0, 3000, 5000, 10000, 20000],

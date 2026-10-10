@@ -260,7 +260,8 @@ export default async function portfolioAdd({ ownerId, setGuard }) {
         nextOrder += 1;
         savedIds.push(itemId);
         unsaved.delete('pair');
-        done('Before & after saved.', itemId);
+        resetPair();
+        done('Before & after saved.', itemId, item.is_published);
       } catch (error) {
         pairStatus.className = 'a-alert-error mb-3';
         pairStatus.textContent = `${error.message} Nothing was saved. You can try again.`;
@@ -270,6 +271,17 @@ export default async function portfolioAdd({ ownerId, setGuard }) {
       }
     }, 'Saving…'),
   );
+
+  /** Clear both photos and the fields after a successful save. */
+  function resetPair() {
+    for (const role of ['before', 'after']) {
+      if (pair[role]?.url) URL.revokeObjectURL(pair[role].url);
+      pair[role] = null;
+      sideUi[role]?.preview.replaceChildren('No photo yet');
+    }
+    pairFields.reset();
+    pairStatus.className = 'hidden mb-3';
+  }
 
   const pairPanel = h('div', {}, h('p', { class: 'text-muted mb-4' }, 'Show a transformation: one "before" photo and one "after" photo, saved together as a single piece of work.'), pairStatus, h('div', { class: 'grid grid-cols-2 gap-4 mb-6' }, sidePicker('before', 'Choose "before"'), sidePicker('after', 'Choose "after"')), pairFields.el, pairProgress.el, pairSave);
 
@@ -369,7 +381,8 @@ export default async function portfolioAdd({ ownerId, setGuard }) {
         nextOrder += 1;
         savedIds.push(itemId);
         unsaved.delete('video');
-        done('Video saved.', itemId);
+        resetVideo();
+        done('Video saved.', itemId, item.is_published);
       } catch (error) {
         vSay(error.code === 'cancelled' ? 'Cancelled. Nothing was saved.' : `${error.message} Nothing was saved. You can press Save video to try again.`, error.code === 'cancelled' ? 'info' : 'error');
       } finally {
@@ -380,6 +393,18 @@ export default async function portfolioAdd({ ownerId, setGuard }) {
     }, 'Saving…'),
   );
   videoCancel.addEventListener('click', () => videoAbort?.abort());
+
+  /** Clear the clip, its poster and the fields after a successful save. */
+  function resetVideo() {
+    if (clip?.url) URL.revokeObjectURL(clip.url);
+    if (clipPoster?.url) URL.revokeObjectURL(clipPoster.url);
+    clip = null;
+    clipPoster = null;
+    videoFields.reset();
+    videoWarn.classList.add('hidden');
+    videoStatus.className = 'hidden mb-3';
+    drawVideo();
+  }
 
   const videoPanel = h('div', {}, h('p', { class: 'text-muted mb-4' }, 'Add a short clip of a cut. Long videos upload in pieces and pick up where they left off if your connection drops.'), videoStatus, videoWarn, clipPicker.el, videoPreview, h('div', { class: 'mt-4 mb-6' }, clipPosterPicker.el), videoFields.el, videoProgress.el, h('div', { class: 'flex flex-wrap gap-2' }, videoSave, videoCancel));
 
@@ -418,9 +443,10 @@ export default async function portfolioAdd({ ownerId, setGuard }) {
 
   const container = h('div', { class: 'a-page' });
   const success = h('div', { class: 'hidden a-card text-center py-8 mb-6', role: 'status' });
-  function done(message, itemId) {
+  function done(message, itemId, published = false) {
     success.classList.remove('hidden');
-    success.replaceChildren(h('h2', { class: 'text-xl mb-2' }, message), h('p', { class: 'text-muted mb-4' }, 'It\'s saved. Publish it from Manage Work whenever you\'re ready.'), h('div', { class: 'flex flex-wrap justify-center gap-2' }, h('a', { href: `/admin/portfolio/${itemId}`, class: 'a-btn-secondary' }, 'Edit it'), h('a', { href: '/admin/portfolio', class: 'a-btn-primary' }, 'Go to Manage Work'), h('a', { href: '/admin/portfolio/add', class: 'a-btn-secondary' }, 'Add more')));
+    const next = published ? 'It\'s live on your website now.' : 'It\'s saved as a draft. Publish it from Manage Work whenever you\'re ready.';
+    success.replaceChildren(h('h2', { class: 'text-xl mb-2' }, message), h('p', { class: 'text-muted mb-4' }, next), h('div', { class: 'flex flex-wrap justify-center gap-2' }, h('a', { href: `/admin/portfolio/${itemId}`, class: 'a-btn-secondary' }, 'Edit it'), h('a', { href: '/admin/portfolio', class: 'a-btn-primary' }, 'Go to Manage Work'), h('a', { href: '/admin/portfolio/add', class: 'a-btn-secondary' }, 'Add more')));
     success.setAttribute('tabindex', '-1');
     success.focus();
     toast(message);
