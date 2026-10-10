@@ -262,9 +262,11 @@ npm run test:e2e       # Playwright (needs the local stack + a built preview)
 npm audit
 ```
 
-**Last full run** (2026-09-30, local Supabase, Windows 11, Edge): 203 unit tests, ESLint, production build (root and `/hyrumcuts/` base), `npm audit` (0 vulnerabilities), all 8 migrations applied by `db reset`, 39/39 pgTAP, 81/81 `test:rls` (including the Requests inbox and a 7 MB resumable upload), and 57 Playwright tests passing at desktop and phone size (1 phone-only test skipped on desktop by design). The `/hyrumcuts/` build was also checked by hand on a GitHub-Pages-like static server (deep admin links via 404.html, booking request into the inbox).
+**Last full run** (2026-09-30, local Supabase, Windows 11, Edge): 203 unit tests, ESLint, production build (root and `/hyrumcuts/` base), `npm audit` (see note below), all 8 migrations applied by `db reset`, 39/39 pgTAP, 81/81 `test:rls` (including the Requests inbox and a 7 MB resumable upload), and 57 Playwright tests passing at desktop and phone size (1 phone-only test skipped on desktop by design). The `/hyrumcuts/` build was also checked by hand on a GitHub-Pages-like static server (deep admin links via 404.html, booking request into the inbox).
 
 > Run `npm run test:e2e` against the **local** stack only. If your `.env` points at a hosted project, override it for that shell first: `VITE_SUPABASE_URL=http://127.0.0.1:54321` and `VITE_SUPABASE_PUBLISHABLE_KEY=<local publishable key from supabase status>` (variables already set in the environment take priority over `.env`).
+
+> **npm audit (2026-10-09):** 7 advisories remain, all inside **Tailwind CSS 3** (build-time only: `braces`/`micromatch`/`chokidar`, `postcss-selector-parser`). Tailwind only reads this repository's own files at build time and none of it ships to visitors, so the live site is not exposed. Clearing them needs the Tailwind 4 migration (`npm audit fix --force` is a breaking change: do it as its own task and check the design afterwards).
 
 `verify-security.mjs` and `security.test.sql` prove: visitors read published content; visitors cannot read drafts; visitors cannot mutate content; Hyrum manages his own content; a different signed-in user cannot manage Hyrum's rows, upload, or delete his files; the audit log, owner row and cleanup queue stay private.
 

@@ -72,15 +72,22 @@ function card(item, index) {
   }
 
   if (item.kind === 'video') {
+    // Videos play right in the grid (no pop-up). Nothing downloads until the
+    // visitor taps play: preload="none" with the poster as the cover.
+    const video = h(
+      'video',
+      { poster: item.video.poster, preload: 'none', playsinline: true, class: 'h-full w-full object-cover bg-ink', 'aria-label': item.altText || item.title, dataset: { inlineVideo: '' } },
+      h('source', { src: item.video.full, type: item.video.mime }),
+    );
+    const play = h(
+      'button',
+      { type: 'button', class: 'absolute inset-0 flex items-center justify-center', 'aria-label': `Play video: ${item.title}`, dataset: { inlinePlay: '' } },
+      h('span', { class: 'flex h-14 w-14 items-center justify-center rounded-full bg-ink/70 text-ivory transition-transform group-hover:scale-110' }, svgIcon(PLAY_ICON, { size: 22, fill: 'currentColor', strokeWidth: 0 })),
+    );
     return h(
-      'a',
-      { ...base, href: item.video.full, 'aria-label': `${item.title} (video)` },
-      h(
-        'span',
-        { class: `relative block ${ratioClass(item.video.width, item.video.height)} overflow-hidden` },
-        h('img', { src: item.video.poster, alt: item.altText, loading: 'lazy', decoding: 'async', class: 'h-full w-full object-cover' }),
-        h('span', { class: 'absolute inset-0 flex items-center justify-center' }, h('span', { class: 'flex h-14 w-14 items-center justify-center rounded-full bg-ink/70 text-ivory' }, svgIcon(PLAY_ICON, { size: 22, fill: 'currentColor', strokeWidth: 0 }))),
-      ),
+      'div',
+      { class: 'gallery-figure group', dataset: { videoItem: '', id: item.id } },
+      h('span', { class: `relative block ${ratioClass(item.video.width, item.video.height)} overflow-hidden bg-ink` }, video, play),
       title,
     );
   }
@@ -132,7 +139,9 @@ export function initGallery({ items, categories, settings, onRender }) {
   let active = 'all';
   let current = items;
 
-  const lightbox = createLightbox(() => current);
+  // The pop-up viewer is for photos; videos play in place in the grid.
+  const viewable = () => current.filter((i) => i.kind !== 'video');
+  const lightbox = createLightbox(viewable);
 
   function render() {
     current = filterItems(items, active);
@@ -167,13 +176,15 @@ export function initGallery({ items, categories, settings, onRender }) {
     setVisible(filters, false);
   }
 
+  initInlineVideos(grid);
+
   // One delegated handler survives every re-render.
   grid.addEventListener('click', (event) => {
     const link = event.target instanceof Element ? event.target.closest('[data-gallery-item]') : null;
     if (!link) return;
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return; // let "open in new tab" work
     event.preventDefault();
-    const index = current.findIndex((i) => i.id === link.dataset.id);
+    const index = viewable().findIndex((i) => i.id === link.dataset.id);
     if (index >= 0) lightbox.open(index, link);
   });
 
@@ -189,15 +200,64 @@ export function initGallery({ items, categories, settings, onRender }) {
     if (!id || lightbox.isOpen()) return;
     if (!items.some((i) => i.id === id)) return;
     if (!current.some((i) => i.id === id)) setFilter('all');
-    const index = current.findIndex((i) => i.id === id);
-    const link = grid.querySelector(`[data-gallery-item][data-id="${CSS.escape(id)}"]`);
-    link?.scrollIntoView({ block: 'center' });
-    lightbox.open(index, link);
+    const el = grid.querySelector(`[data-id="${CSS.escape(id)}"]`);
+    el?.scrollIntoView({ block: 'center' });
+    // A shared video link just brings the clip into view, ready to play.
+    if (el?.hasAttribute('data-video-item')) {
+      el.querySelector('[data-inline-play]')?.focus({ preventScroll: true });
+      return;
+    }
+    const index = viewable().findIndex((i) => i.id === id);
+    if (index >= 0) lightbox.open(index, el);
   }
 
   render();
   openFromHash();
   window.addEventListener('hashchange', openFromHash);
+}
+
+/**
+ * Tap-to-play videos inside the grid. Only one plays at a time, a video that
+ * scrolls out of view pauses, and when it ends the cover and play button
+ * come back. While playing, the whole frame is shown (no cropping).
+ */
+function initInlineVideos(grid) {
+  const reset = (video) => {
+    video.controls = false;
+    video.classList.replace('object-contain', 'object-cover');
+    video.parentElement?.querySelector('[data-inline-play]')?.classList.remove('hidden');
+  };
+  const pauseOthers = (except) => {
+    for (const v of grid.querySelectorAll('[data-inline-video]')) if (v !== except && !v.paused) v.pause();
+  };
+  const offscreen = 'IntersectionObserver' in window
+    ? new IntersectionObserver((entries) => {
+      for (const e of entries) if (!e.isIntersecting && !e.target.paused) e.target.pause();
+    }, { threshold: 0.25 })
+    : null;
+
+  grid.addEventListener('click', (event) => {
+    const button = event.target instanceof Element ? event.target.closest('[data-inline-play]') : null;
+    if (!button) return;
+    const video = button.parentElement?.querySelector('[data-inline-video]');
+    if (!video) return;
+    pauseOthers(video);
+    button.classList.add('hidden');
+    video.controls = true;
+    video.classList.replace('object-cover', 'object-contain');
+    offscreen?.observe(video);
+    video.play().catch(() => {
+      // Autoplay with sound refused (rare after a tap): leave the native controls showing.
+    });
+    video.focus({ preventScroll: true });
+  });
+  // "ended" and "play" don't bubble: listen in the capture phase.
+  grid.addEventListener('play', (event) => pauseOthers(event.target), true);
+  grid.addEventListener('ended', (event) => {
+    const video = event.target;
+    reset(video);
+    video.load(); // back to the cover image
+  }, true);
 }
 
 function createLightbox(getItems) {
