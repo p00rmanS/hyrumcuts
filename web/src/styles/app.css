@@ -93,14 +93,6 @@
     background-size: 180px 180px;
   }
 
-  [data-sticky-booking-cta] {
-    transition: transform 200ms ease, opacity 200ms ease;
-  }
-  .sticky-cta-hidden {
-    transform: translateY(100%);
-    opacity: 0;
-    pointer-events: none;
-  }
 
   .hp-field {
     position: absolute !important;

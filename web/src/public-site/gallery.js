@@ -110,7 +110,7 @@ function card(item, index) {
 function ctaBand(settings) {
   return h(
     'div',
-    { dataset: { hideStickyCta: '' }, class: 'col-span-2 lg:col-span-3 flex flex-col sm:flex-row items-center justify-between gap-4 bg-ivory px-6 py-8 my-2 text-center sm:text-left' },
+    { class: 'col-span-2 lg:col-span-3 flex flex-col sm:flex-row items-center justify-between gap-4 bg-ivory px-6 py-8 my-2 text-center sm:text-left' },
     h('p', { class: 'text-xl font-display' }, 'Ready for your next look?'),
     h('a', { href: '/booking/', class: 'btn-primary', dataset: { bookCta: '' } }, settings.cta_gallery_label),
   );

@@ -22,9 +22,16 @@
       <a href="/#contact" data-nav-contact class="hidden text-sm font-medium tracking-wide hover:text-copper-dark transition-colors">Contact</a>
     </nav>
 
-    <div class="hidden lg:flex items-center gap-4">
-      <a href="/booking/" class="btn-primary" data-book-cta data-bind="cta_book_label">Book Your Next Cut</a>
-    </div>
+    <div class="flex items-center gap-1 sm:gap-2">
+      <!-- Instagram / Facebook (filled in from Settings > Social Links; hidden while empty). -->
+      <!-- Outer: which screen sizes (the phone menu has its own row). Inner: shown only when a link is set. -->
+      <div class="hidden sm:block"><div class="hidden flex items-center" data-social data-social-icons data-social-tone="dark"></div></div>
+
+      <!-- The one booking button up top: a scissors icon. Same behaviour as every Book button. -->
+      <a href="/booking/" data-book-cta data-bind-label="cta_book_label" aria-label="Book Your Next Cut" title="Book Your Next Cut"
+         class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-ink text-ivory hover:bg-copper-dark transition-colors">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></svg>
+      </a>
 
     <button
       type="button"
@@ -37,6 +44,7 @@
       <svg data-menu-icon-open width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
       <svg data-menu-icon-close width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" class="hidden"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
     </button>
+    </div>
   </div>
 </header>
 
@@ -53,14 +61,7 @@
     <a href="/#reviews" data-mobile-link data-nav-reviews class="hidden py-4 text-xl font-display border-b border-ink/10">Reviews</a>
     <a href="/#faq" data-mobile-link data-nav-faq class="hidden py-4 text-xl font-display border-b border-ink/10">FAQ</a>
     <a href="/#contact" data-mobile-link data-nav-contact class="hidden py-4 text-xl font-display border-b border-ink/10">Contact</a>
-    <a href="/booking/" class="btn-primary mt-6 w-full" data-book-cta data-bind="cta_book_label">Book Your Next Cut</a>
+    <div class="hidden mt-6 flex items-center gap-2" data-social data-social-icons data-social-tone="dark"></div>
   </nav>
 </div>
 
-<a
-  href="/booking/"
-  data-sticky-booking-cta
-  data-book-cta
-  data-bind="cta_book_label"
-  class="lg:hidden fixed inset-x-0 bottom-0 z-40 btn-primary rounded-none justify-center py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
->Book Your Next Cut</a>

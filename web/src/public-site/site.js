@@ -3,14 +3,13 @@ import { activeAnnouncement, fetchPublicContent, resolveSettings, sectionAvailab
 import { setVisible } from '../lib/dom.js';
 import { applySettings } from './bind.js';
 import { applyBookingCtas, initCalendlyClicks } from './calendly.js';
-import { initMobileNav, initStickyBookingCta, initStickyHeader } from './chrome.js';
+import { initMobileNav, initStickyHeader } from './chrome.js';
 import { renderAnnouncement, renderSocial } from './sections.js';
 
 /** Behaviour every public page needs, before any data arrives. */
 export function initChrome() {
   initMobileNav();
   initStickyHeader();
-  initStickyBookingCta();
   initCalendlyClicks();
 }
 

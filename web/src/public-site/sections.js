@@ -189,29 +189,26 @@ export function renderAnnouncement(announcement) {
 
 /** Instagram / Facebook icon links in the footer. */
 export function renderSocial(settings) {
-  const target = document.querySelector('[data-social-icons]');
-  const wrap = document.querySelector('[data-footer-social]');
-  if (!target || !wrap) return;
-
   const links = [
     { url: safeHttpUrl(settings.instagram_url, { httpsOnly: true }), svg: instagramSvg, label: `Visit ${settings.brand_name} on Instagram` },
     { url: safeHttpUrl(settings.facebook_url, { httpsOnly: true }), svg: facebookSvg, label: `Visit ${settings.brand_name} on Facebook` },
   ].filter((l) => l.url);
 
-  setVisible(wrap, links.length > 0);
-  mount(
-    target,
-    links.map((l) => {
-      const icon = h('span', { class: 'h-5 w-5 block' });
-      // Trusted, developer-supplied SVG files bundled at build time (not user content).
-      icon.innerHTML = l.svg;
-      return h(
-        'a',
-        { href: l.url, target: '_blank', rel: 'noopener noreferrer', 'aria-label': `${l.label} (opens in a new tab)`, class: 'inline-flex h-11 w-11 items-center justify-center text-ivory hover:text-copper transition-colors' },
-        icon,
-      );
-    }),
-  );
+  // Every spot that shows them: header, phone menu, footer. Each container says
+  // whether it sits on a light or a dark background.
+  for (const target of document.querySelectorAll('[data-social-icons]')) {
+    const tone = target.dataset.socialTone === 'dark' ? 'text-ink hover:text-copper-dark' : 'text-ivory hover:text-copper';
+    mount(
+      target,
+      links.map((l) => {
+        const icon = h('span', { class: 'h-5 w-5 block' });
+        // Trusted, developer-supplied SVG files bundled at build time (not user content).
+        icon.innerHTML = l.svg;
+        return h('a', { href: l.url, target: '_blank', rel: 'noopener noreferrer', 'aria-label': `${l.label} (opens in a new tab)`, title: l.label, class: `inline-flex h-11 w-11 items-center justify-center ${tone} transition-colors` }, icon);
+      }),
+    );
+    setVisible(target.closest('[data-social]') ?? target, links.length > 0);
+  }
 }
 
 /** "See more on Instagram" buttons plus an optional photo strip from published work. */

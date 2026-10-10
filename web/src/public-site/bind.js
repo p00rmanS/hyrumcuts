@@ -31,6 +31,15 @@ export function applySettings(settings, root = document) {
     }
   }
 
+  // Icon-only buttons (the header's scissors "Book" button) take their accessible name and tooltip from a setting.
+  for (const el of root.querySelectorAll('[data-bind-label]')) {
+    const value = settings[el.dataset.bindLabel];
+    if (typeof value === 'string' && value.trim()) {
+      el.setAttribute('aria-label', value.trim());
+      el.setAttribute('title', value.trim());
+    }
+  }
+
   for (const el of root.querySelectorAll('[data-show-if]')) {
     setVisible(el, hasText(settings[el.dataset.showIf]));
   }
