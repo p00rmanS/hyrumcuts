@@ -120,7 +120,11 @@ Requests contain your clients' personal details and only you can see them. **Del
 
 Under **Settings**:
 
-- **Booking Link**: paste your Calendly (or other) link. Your booking system stays exactly as it is; this only changes where the **Book** buttons go. Choose **None** if you only want the on-site request form.
+- **Booking Link**: where the **Book** buttons go. Choose your provider, then paste its link. Choose **None** to use only the on-site request form.
+  - **Google Calendar (free):** in Google Calendar, tap **Create → Appointment schedule**, set your hours and appointment length, and save. Open the schedule, choose **Open booking page** (or **Share**), and copy the link. It looks like `https://calendar.app.google/…`. Paste it here with the provider set to **Google Calendar appointment page**. Bookings land straight in that Google Calendar.
+  - **Calendly:** paste your event link (`https://calendly.com/…`).
+  - Switching accounts later (for example to your own Gmail) is just pasting the new link here; nothing else changes.
+  - If the link doesn't match the provider you picked, the page tells you which one to choose.
 - **Services**: the cuts you offer, each with an optional one-line description. They appear in the **Services** section of your home page and as the "Service" choices on the request form. Drag to reorder, and turn one off to hide it everywhere. (No prices are ever shown.)
 - **Opening Hours**: type your hours for each day, like "9am–6pm" or "Closed", plus an optional note ("By appointment only"). Days with the same hours are grouped on your site ("Tue–Thu 9am–6pm"). Leave a day empty to leave it out.
 - **Contact**: phone, public email, directions link.

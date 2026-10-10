@@ -129,7 +129,7 @@ export const SETTINGS_SECTIONS = {
           ['none', 'None (use the request form only)'],
         ],
       },
-      { key: 'booking_url', label: 'Booking link', type: 'url', max: 500, help: 'Paste the full link from your booking provider. It must start with https://', example: 'https://calendly.com/your-name/haircut' },
+      { key: 'booking_url', label: 'Booking link', type: 'url', max: 500, help: 'Paste the full link from your booking provider. Google Calendar: open your appointment schedule, choose Open booking page (or Share), and copy the link. Calendly: copy your event link.', example: 'https://calendar.app.google/AbCd1234' },
       { key: 'booking_time_windows', label: 'Time choices on the request form', type: 'lines', maxLines: 8, max: 60, help: 'One per line. These are the "preferred time" choices people can pick when sending a request.', example: 'Morning (9am–12pm)' },
     ],
   },
@@ -240,6 +240,10 @@ export function validateSection(sectionKey, rawValues) {
   if (sectionKey === 'booking' && cleaned.booking_provider !== 'none' && !cleaned.booking_url && !errors.booking_url) {
     errors.booking_url = 'Add your booking link, or choose "None" as the provider.';
   }
+  if (sectionKey === 'booking' && cleaned.booking_url && !errors.booking_url) {
+    const problem = bookingLinkProblem(cleaned.booking_provider, cleaned.booking_url);
+    if (problem) errors.booking_url = problem;
+  }
   if (sectionKey === 'announcement') {
     const { announcement_starts_on: from, announcement_ends_on: until } = cleaned;
     if (from && until && !errors.announcement_ends_on && until < from) errors.announcement_ends_on = 'The last day can\'t be before the first day.';
@@ -248,6 +252,32 @@ export function validateSection(sectionKey, rawValues) {
     }
   }
   return { ok: Object.keys(errors).length === 0, errors, cleaned };
+}
+
+/**
+ * Where each booking provider's links live. "Another booking website" accepts
+ * any https link; the named providers are checked so a pasted link from the
+ * wrong service (or a typo'd page) never silently becomes the Book button.
+ */
+export const BOOKING_HOSTS = Object.freeze({
+  calendly: { host: /(^|\.)calendly\.com$/i, name: 'Calendly', example: 'https://calendly.com/your-name/haircut' },
+  google_calendar: { host: /^(calendar\.app\.google|calendar\.google\.com)$/i, name: 'Google Calendar', example: 'https://calendar.app.google/AbCd1234' },
+});
+
+/** '' when the link fits the chosen provider, else a sentence saying what to do. */
+export function bookingLinkProblem(provider, url) {
+  const rule = BOOKING_HOSTS[provider];
+  if (!rule) return '';
+  let host = '';
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    return '';
+  }
+  if (rule.host.test(host)) return '';
+  const actual = Object.entries(BOOKING_HOSTS).find(([, r]) => r.host.test(host));
+  if (actual) return `That's a ${actual[1].name} link. Change "Booking provider" to ${actual[1].name}, or paste your ${rule.name} link.`;
+  return `That doesn't look like a ${rule.name} booking link. It should look like ${rule.example}`;
 }
 
 /** The value a field shows in its input (arrays become one line each). */

@@ -31,7 +31,7 @@ The site launches **full of placeholder content** (the same sample photos, portr
 - [ ] Email for privacy requests (optional; falls back to the public email). The privacy page currently tells people to use the contact details on the site.
 - [ ] Google Maps / directions link, if you want a "Get directions" link.
 - [ ] **Instagram** and **Facebook** links. *Settings → Social Links.*
-- [ ] **Calendly (or other booking) link.** *Settings → Booking Link.* The old site used a **temporary demo link** (`calendly.com/jamesbaldwindean2026/…`). That link is **not** carried over: enter Hyrum's real one. Until then the Book buttons go to the on-site request form.
+- [ ] **Booking link: Google Calendar appointment page for now** (Calendly later, if wanted). Set the provider to "Google Calendar appointment page" and paste the `calendar.app.google/…` link. When Hyrum's own Gmail is ready, create the schedule there and paste the new link. Old note: **Calendly (or other booking) link.** *Settings → Booking Link.* The old site used a **temporary demo link** (`calendly.com/jamesbaldwindean2026/…`). That link is **not** carried over: enter Hyrum's real one. Until then the Book buttons go to the on-site request form.
 - [ ] Send yourself a **test request** from the live booking page, check it appears in **Requests**, then delete it.
 
 ## Reviews
