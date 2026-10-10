@@ -324,6 +324,6 @@ Controls that depend on **Supabase / hosting settings** (not code): disabling si
 | The booking form says requests "aren't switched on yet" | No owner registered in this Supabase project, or the site was built without Supabase variables. |
 | Booking form says "a lot of requests are coming in" | The site-wide flood limit (20 requests per 10 minutes) was hit, usually by a bot. It clears itself. |
 | Public site shows only the default brand copy (none of Hyrum's edits) right after a deploy | The frontend expects a column the database doesn't have yet. Apply the pending migrations (`npx supabase db push`). |
-| Public site shows the gallery error message | Supabase unreachable / paused (free projects pause after inactivity). Restore the project. The page still shows brand copy and Book buttons. |
+| Public site shows the gallery error message, or nothing loads from the database | Supabase unreachable / **paused**: free projects pause after about a week with no requests (Supabase emails you). Restore it in the dashboard (Project → Restore); content comes back unchanged. `.github/workflows/keep-supabase-awake.yml` pings it every 2 days to prevent this and fails loudly (GitHub emails you) if it is down. The page still shows brand copy and Book buttons. |
 | Reset email never arrives | SMTP not configured (built-in mailer is rate-limited) or the redirect URL isn't allow-listed. |
 | Old file still visible after a replace | It shouldn't be: replacements use new file names. If a delete failed it is queued and retried the next time `/admin` opens. |
