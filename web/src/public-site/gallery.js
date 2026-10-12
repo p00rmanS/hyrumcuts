@@ -9,7 +9,6 @@ import { filterItems, visibleCategories } from '../lib/content.js';
  * full image, so the gallery still works if the lightbox script fails.
  */
 
-const CTA_AFTER = 6; // show the mid-gallery booking band after this many cards
 const PLAY_ICON = 'M8 5v14l11-7z';
 const HASH_PREFIX = '#work/';
 
@@ -28,18 +27,17 @@ export function idFromHash(hash) {
   }
 }
 
-function ratioClass(width, height) {
-  if (!width || !height) return 'aspect-[3/4]';
-  if (width === height) return 'aspect-square';
-  return width > height ? 'aspect-[4/3]' : 'aspect-[3/4]';
-}
+// Every card in a grid has the same shape so rows line up evenly; photos are
+// cropped to fill it (object-cover) and open uncropped in the viewer.
+const PHOTO_SHAPE = 'aspect-[4/5]';
+const VIDEO_SHAPE = 'aspect-[9/16]';
 
 function img(view, alt, { eager = false } = {}) {
   return h('img', {
     src: view.thumb,
     // The card variant (<=800px) for grid tiles, the full variant on large or dense screens.
     srcset: view.thumb !== view.full && view.thumbWidth && view.width ? `${view.thumb} ${view.thumbWidth}w, ${view.full} ${view.width}w` : null,
-    sizes: '(min-width: 1024px) 33vw, 50vw',
+    sizes: '(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw',
     alt,
     loading: eager ? 'eager' : 'lazy',
     decoding: 'async',
@@ -60,12 +58,12 @@ function card(item, index) {
   if (item.kind === 'transformation') {
     return h(
       'a',
-      { ...base, href: item.after.full, class: 'gallery-figure group col-span-2 sm:col-span-1' },
+      { ...base, href: item.after.full, class: 'gallery-figure group col-span-2' },
       h(
         'span',
         { class: 'grid grid-cols-2 gap-0.5' },
-        h('span', { class: 'relative block aspect-[3/4] overflow-hidden' }, img(item.before, `${item.altText} — before`), label('Before', 'bg-ink/85 text-ivory')),
-        h('span', { class: 'relative block aspect-[3/4] overflow-hidden' }, img(item.after, `${item.altText} — after`), label('After', 'bg-copper-dark text-ivory')),
+        h('span', { class: `relative block ${PHOTO_SHAPE} overflow-hidden` }, img(item.before, `${item.altText} — before`), label('Before', 'bg-ink/85 text-ivory')),
+        h('span', { class: `relative block ${PHOTO_SHAPE} overflow-hidden` }, img(item.after, `${item.altText} — after`), label('After', 'bg-copper-dark text-ivory')),
       ),
       title,
     );
@@ -87,7 +85,7 @@ function card(item, index) {
     return h(
       'div',
       { class: 'gallery-figure group', dataset: { videoItem: '', id: item.id } },
-      h('span', { class: `relative block ${ratioClass(item.video.width, item.video.height)} overflow-hidden bg-ink` }, video, play),
+      h('span', { class: `relative block ${VIDEO_SHAPE} overflow-hidden bg-ink` }, video, play),
       title,
     );
   }
@@ -98,21 +96,11 @@ function card(item, index) {
     { ...base, href: view.full },
     h(
       'span',
-      { class: `relative block ${ratioClass(view.width, view.height)} overflow-hidden` },
+      { class: `relative block ${PHOTO_SHAPE} overflow-hidden` },
       img(view, item.altText, { eager: index < 2 }),
       item.featured ? h('span', { class: 'sr-only' }, 'Featured work') : null,
     ),
     title,
-  );
-}
-
-/** Mid-gallery booking band. Its label and behaviour are applied by the caller. */
-function ctaBand(settings) {
-  return h(
-    'div',
-    { class: 'col-span-2 lg:col-span-3 flex flex-col sm:flex-row items-center justify-between gap-4 bg-ivory px-6 py-8 my-2 text-center sm:text-left' },
-    h('p', { class: 'text-xl font-display' }, 'Ready for your next look?'),
-    h('a', { href: '/booking/', class: 'btn-primary', dataset: { bookCta: '' } }, settings.cta_gallery_label),
   );
 }
 
@@ -121,6 +109,9 @@ function ctaBand(settings) {
  */
 export function initGallery({ items, categories, settings, onRender }) {
   const grid = document.querySelector('[data-gallery-grid]');
+  const videoGrid = document.querySelector('[data-video-grid]');
+  const videoBlock = document.querySelector('[data-video-block]');
+  const section = grid?.closest('section') ?? document;
   const filters = document.querySelector('[data-gallery-filters]');
   const status = document.querySelector('[data-gallery-status]');
   const emptyMsg = document.querySelector('[data-gallery-empty]');
@@ -129,6 +120,7 @@ export function initGallery({ items, categories, settings, onRender }) {
   if (items.length === 0) {
     grid.replaceChildren();
     setVisible(grid, false);
+    setVisible(videoBlock, false);
     setVisible(filters, false);
     setVisible(emptyMsg, true);
     return;
@@ -145,11 +137,19 @@ export function initGallery({ items, categories, settings, onRender }) {
 
   function render() {
     current = filterItems(items, active);
-    const nodes = current.map((item, i) => card(item, i));
-    if (current.length > CTA_AFTER) nodes.splice(CTA_AFTER, 0, ctaBand(settings));
-    mount(grid, nodes);
-    onRender?.(grid);
-    if (status) status.textContent = `Showing ${current.length} ${current.length === 1 ? 'cut' : 'cuts'}`;
+    const photos = current.filter((i) => i.kind !== 'video');
+    const videos = current.filter((i) => i.kind === 'video');
+    mount(grid, photos.map((item, i) => card(item, i)));
+    setVisible(grid, photos.length > 0);
+    if (videoGrid) {
+      mount(videoGrid, videos.map((item, i) => card(item, i)));
+      setVisible(videoBlock, videos.length > 0);
+    }
+    onRender?.(section);
+    if (status) {
+      const parts = [photos.length && `${photos.length} ${photos.length === 1 ? 'photo' : 'photos'}`, videos.length && `${videos.length} ${videos.length === 1 ? 'video' : 'videos'}`].filter(Boolean);
+      status.textContent = `Showing ${parts.join(' and ')}`;
+    }
   }
 
   const cats = visibleCategories(categories, items);
@@ -176,7 +176,7 @@ export function initGallery({ items, categories, settings, onRender }) {
     setVisible(filters, false);
   }
 
-  initInlineVideos(grid);
+  if (videoGrid) initInlineVideos(videoGrid);
 
   // One delegated handler survives every re-render.
   grid.addEventListener('click', (event) => {
@@ -200,7 +200,7 @@ export function initGallery({ items, categories, settings, onRender }) {
     if (!id || lightbox.isOpen()) return;
     if (!items.some((i) => i.id === id)) return;
     if (!current.some((i) => i.id === id)) setFilter('all');
-    const el = grid.querySelector(`[data-id="${CSS.escape(id)}"]`);
+    const el = section.querySelector(`[data-id="${CSS.escape(id)}"]`);
     el?.scrollIntoView({ block: 'center' });
     // A shared video link just brings the clip into view, ready to play.
     if (el?.hasAttribute('data-video-item')) {

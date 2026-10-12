@@ -81,14 +81,21 @@
         <div class="hidden flex gap-2 overflow-x-auto pb-2 mb-6 -mx-5 px-5 sm:mx-0 sm:px-0 sm:flex-wrap" role="group" aria-label="Filter gallery by category" data-gallery-filters></div>
         <p class="sr-only" role="status" aria-live="polite" data-gallery-status></p>
 
-        <!-- Skeleton tiles reserve the grid's space while content loads. -->
-        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5" data-gallery-grid>
-          <div class="skeleton aspect-[3/4]" data-skeleton aria-hidden="true"></div>
-          <div class="skeleton aspect-[3/4]" data-skeleton aria-hidden="true"></div>
-          <div class="skeleton aspect-[3/4] hidden lg:block" data-skeleton aria-hidden="true"></div>
-          <div class="skeleton aspect-[3/4]" data-skeleton aria-hidden="true"></div>
-          <div class="skeleton aspect-[3/4]" data-skeleton aria-hidden="true"></div>
-          <div class="skeleton aspect-[3/4] hidden lg:block" data-skeleton aria-hidden="true"></div>
+        <!-- Photos (and before/afters). Skeleton tiles reserve the space while content loads. -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5" data-gallery-grid>
+          <div class="skeleton aspect-[4/5]" data-skeleton aria-hidden="true"></div>
+          <div class="skeleton aspect-[4/5]" data-skeleton aria-hidden="true"></div>
+          <div class="skeleton aspect-[4/5] hidden sm:block" data-skeleton aria-hidden="true"></div>
+          <div class="skeleton aspect-[4/5] hidden lg:block" data-skeleton aria-hidden="true"></div>
+        </div>
+
+        <!-- Videos get their own row: they play in place, so they never mix into the photo grid. -->
+        <div class="hidden mt-14 sm:mt-20" data-video-block aria-labelledby="videos-heading">
+          <div class="flex items-baseline justify-between gap-4 mb-6">
+            <h3 id="videos-heading" class="text-2xl sm:text-3xl">Videos</h3>
+            <p class="text-sm text-muted">Tap a video to play it</p>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5" data-video-grid></div>
         </div>
 
         <p class="hidden text-muted py-16 text-center" data-gallery-empty>New work is being added. Check back soon.</p>
@@ -186,7 +193,7 @@
     <section class="on-dark py-20 sm:py-24 bg-ink text-ivory grain-overlay">
       <div class="container-editorial text-center max-w-2xl mx-auto">
         <h2 class="text-3xl sm:text-4xl mb-8">Ready for a fresh cut?</h2>
-        <a href="/booking/" class="btn-primary" data-book-cta data-bind="cta_banner_label">Reserve Your Chair</a>
+        <a href="/booking/" class="btn-primary" data-book-cta data-bind="cta_book_label">Book Your Next Cut</a>
       </div>
     </section>
 

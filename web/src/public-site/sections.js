@@ -3,6 +3,7 @@ import facebookSvg from '../assets/icons/facebook.svg?raw';
 import { h, mount, setVisible } from '../lib/dom.js';
 import { hasAboutContent, openingHours, usableFaqs, usableReviews, usableServices } from '../lib/content.js';
 import { publicMediaUrl } from '../lib/media-url.js';
+import { STARTER_PORTRAIT } from '../lib/starter-content.js';
 import { safeHttpUrl } from '../lib/urls.js';
 import { setSectionVisible } from './bind.js';
 
@@ -116,8 +117,10 @@ function plusIcon() {
 }
 
 export function renderAbout(settings) {
-  const photoPath = settings.profile_photo_path;
-  const photo = publicMediaUrl(photoPath);
+  // Until Hyrum uploads his portrait (Media > Profile Photo), show the branded
+  // "Portrait coming soon" placeholder so the section never looks unfinished.
+  const ownPhoto = publicMediaUrl(settings.profile_photo_path);
+  const photo = ownPhoto || publicMediaUrl(STARTER_PORTRAIT);
   const show = hasAboutContent(settings);
   setSectionVisible('about', show);
   if (!show) return;
@@ -129,7 +132,7 @@ export function renderAbout(settings) {
     if (photo) {
       img.setAttribute('src', photo);
       // Meaningful alt text comes from the owner; without it the image is decorative.
-      img.setAttribute('alt', settings.profile_photo_alt?.trim() || '');
+      img.setAttribute('alt', ownPhoto ? settings.profile_photo_alt?.trim() || '' : 'Portrait of Hyrum coming soon');
     }
   }
   // Without a photo the text column simply takes the full width.

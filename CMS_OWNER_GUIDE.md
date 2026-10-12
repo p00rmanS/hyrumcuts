@@ -98,9 +98,9 @@ When you (or a client) open a photo in the gallery, the web address changes to p
 
 ## Your portrait, bio and text
 
-- **Media → Profile Photo**: the portrait beside your bio. Add a short description of the photo too.
+- **Media → Profile Photo**: the portrait beside your bio. Until you add one, a "Portrait coming soon" placeholder shows there. Add a short description of the photo too.
 - **Website Content → About**: your name, biography, specialties, general location and availability. Anything you leave empty is simply hidden. (Your About section appears once you add a biography or a photo.)
-- **Website Content → Hero**: the words at the top of the home page and the labels on your Book buttons.
+- **Website Content → Hero**: the words at the top of the home page, and the text on your Book buttons (one setting used by every Book button).
 - **Website Content → FAQ**: questions people ask. Turn each one on or off, drag to reorder.
 - **Website Content → Announcement**: a short notice across the top of every page, for example *"Away Oct 3–10. Booking reopens Oct 11."* You can add a link (like your booking page) and pick **Show from** / **Show until** dates, so it appears and disappears by itself. Dates follow your time zone (Settings → SEO). Clear the message to turn it off. Visitors can close it with the **×**.
 
